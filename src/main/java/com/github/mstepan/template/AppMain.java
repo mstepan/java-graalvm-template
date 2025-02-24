@@ -19,10 +19,8 @@ public class AppMain {
                 scope.fork(
                         () -> {
                             rwLock.readLock().lock();
-
-                            threadsCount.incrementAndGet();
-
                             try {
+                                threadsCount.incrementAndGet();
                                 TimeUnit.SECONDS.sleep(1);
                             } finally {
                                 rwLock.readLock().unlock();
@@ -37,12 +35,16 @@ public class AppMain {
             System.out.printf(
                     "threadsCount acquired read lock from StampedLock: %d%n", threadsCount.get());
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new IllegalStateException(ex);
         }
 
         System.out.println("Main done...");
     }
 
+    /**
+     * Custom implementation for a StructuredTaskScope that tracks count of successful, failed and
+     * undefined tasks.
+     */
     private static final class NeverShutdown<T> extends StructuredTaskScope<T> {
 
         private final AtomicInteger failedCnt = new AtomicInteger(0);

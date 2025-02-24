@@ -5,6 +5,10 @@
 * Compiled to native executable using [GraalVM](https://www.graalvm.org/)
 * Uses [virtual threads](https://docs.oracle.com/en/java/javase/23/core/virtual-threads.html)
   and [structured concurrency](https://docs.oracle.com/en/java/javase/23/core/structured-concurrency.html)
+* Uses [Error Prone](https://errorprone.info/) as an additional compiler to `javac`.
+* Uses [Spotless](https://github.com/diffplug/spotless/) for automatic code formatting
+  in [Android Open Source Project](https://source.android.com/docs/setup/contribute/code-style) style.
+* Uses [OWASP dependency-check](https://owasp.org/www-project-dependency-check/) to detect CVEs inside dependencies.
 
 ## Build & run
 

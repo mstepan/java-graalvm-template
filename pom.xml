@@ -17,6 +17,9 @@
 
         <!-- 3rd party dependencies -->
 
+        <!-- ErrorProne (https://errorprone.info/) -->
+        <error.prone.version>2.36.0</error.prone.version>
+
         <!--
         GraalVM native tools
         https://graalvm.github.io/native-build-tools/latest/index.html
@@ -71,7 +74,7 @@
                 <version>${spotless.plugin.version}</version>
                 <configuration>
                     <java>
-                        <removeUnusedImports />
+                        <removeUnusedImports/>
                         <googleJavaFormat>
                             <version>${google.java.format.version}</version>
                             <!-- Optional, available versions: GOOGLE, AOSP
@@ -99,8 +102,40 @@
                     <fork>true</fork>
                     <source>23</source>
                     <target>23</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
+                    <encoding>UTF-8</encoding>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                        <!--
+                        https://errorprone.info/docs/installation#maven
+                        -->
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <arg>--should-stop=ifError=FLOW</arg>
+                        <arg>-Xplugin:ErrorProne</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${error.prone.version}</version>
+                        </path>
+                        <!-- Other annotation processors go here.
+
+                        If 'annotationProcessorPaths' is set, processors will no longer be
+                        discovered on the regular -classpath; see also 'Using Error Prone
+                        together with other annotation processors' below. -->
+                    </annotationProcessorPaths>
                 </configuration>
+
             </plugin>
 
             <!--
@@ -120,7 +155,8 @@
                             <createDependencyReducedPom>true</createDependencyReducedPom>
                             <transformers>
                                 <!-- Adds the Main-Class entry to the manifest -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.github.mstepan.template.AppMain</mainClass>
                                 </transformer>
                             </transformers>
