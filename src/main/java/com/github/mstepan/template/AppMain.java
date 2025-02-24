@@ -13,7 +13,7 @@ public class AppMain {
         final ReadWriteLock rwLock = new ReentrantReadWriteLock();
         final AtomicInteger threadsCount = new AtomicInteger(0);
 
-        try (var scope = new NeverShutdown()) {
+        try (var scope = new NeverShutdown<>()) {
 
             for (int i = 0; i < 100_000; ++i) {
                 scope.fork(

@@ -30,6 +30,11 @@
         <spotless.plugin.version>2.37.0</spotless.plugin.version>
         <google.java.format.version>1.17.0</google.java.format.version>
 
+        <!-- Spotbugs -->
+        <maven.spotbugs.plugin.version>4.9.0.0</maven.spotbugs.plugin.version>
+        <spotbugs.version>4.9.1</spotbugs.version>
+        <find.security.bugs.version>1.12.0</find.security.bugs.version>
+
         <!-- Maven other plugins -->
         <maven.compiler.plugin.version>3.12.1</maven.compiler.plugin.version>
         <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
@@ -90,6 +95,42 @@
                             <goal>apply</goal>
                         </goals>
                         <phase>process-sources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+            Spotbugs static analyzer + Find Security Bugs plugin
+            https://spotbugs.readthedocs.io/en/latest/maven.html
+            -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${maven.spotbugs.plugin.version}</version>
+                <configuration>
+                    <excludeFilterFile>src/main/resources/spotbugs-exclude.xml</excludeFilterFile>
+                    <plugins>
+                        <plugin>
+                            <groupId>com.h3xstream.findsecbugs</groupId>
+                            <artifactId>findsecbugs-plugin</artifactId>
+                            <version>${find.security.bugs.version}</version>
+                        </plugin>
+                    </plugins>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs</artifactId>
+                        <version>${spotbugs.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
+                        <phase>test</phase> <!-- bind to test maven phase -->
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
