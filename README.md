@@ -1,6 +1,6 @@
 # Java23 with GraalVM native image template
 
-* Written in `Java 23`
+* Written in `Java 23`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
 * Maven `v3.9.9` with the [wrapper](https://maven.apache.org/wrapper/)
 * Compiled to native executable using [GraalVM](https://www.graalvm.org/)
 * Uses [virtual threads](https://docs.oracle.com/en/java/javase/23/core/virtual-threads.html)
