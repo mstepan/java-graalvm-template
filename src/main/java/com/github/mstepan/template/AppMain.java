@@ -1,57 +1,42 @@
 package com.github.mstepan.template;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.math.BigInteger;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 public class AppMain {
 
     public static void main(String[] args) throws Exception {
-        final int tasksCount = 10_000;
 
-        Runnable ioTask =
-                () -> {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(500L);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                };
+        final int fibIndex = 1_000_000;
 
-        measureThroughput(
-                "virtual", Executors.newVirtualThreadPerTaskExecutor(), tasksCount, ioTask);
-//        measureThroughput("pool-100", Executors.newFixedThreadPool(100), tasksCount, ioTask);
-//        measureThroughput("pool-250", Executors.newFixedThreadPool(250), tasksCount, ioTask);
-        measureThroughput("pool-1000", Executors.newFixedThreadPool(1000), tasksCount, ioTask);
+        try (ForkJoinPool pool = new ForkJoinPool(2)) {
+            BigInteger fibResult = pool.submit(new FibonacciTask(fibIndex)).join();
+            System.out.printf("fib(%d): %d%n", fibIndex, fibResult);
+        }
 
         System.out.println("Main done...");
     }
 
-    private static void measureThroughput(
-            String type, ExecutorService pool, int tasksCount, Runnable task) {
-        Instant start = Instant.now();
+    // 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377
+    private static class FibonacciTask extends RecursiveTask<BigInteger> {
 
-        AtomicLong completedTasks = new AtomicLong();
+        private final int idx;
 
-        try (pool) {
-            for (int i = 0; i < tasksCount; i++) {
-                pool.execute(
-                        () -> {
-                            task.run();
-                            completedTasks.incrementAndGet();
-                        });
-            }
+        FibonacciTask(int idx) {
+            this.idx = idx;
         }
 
-        Instant end = Instant.now();
+        @Override
+        protected BigInteger compute() {
+            if (idx < 2) {
+                return BigInteger.ONE;
+            }
 
-        long durationInMs = Duration.between(start, end).toMillis();
+            var first = new FibonacciTask(idx - 1).fork();
+            var second = new FibonacciTask(idx - 2).fork();
 
-        System.out.printf(
-                "[%s], time: %d ms, throughput: %.1f RPS%n",
-                type, durationInMs, (((double) completedTasks.get() * 1000.0) / durationInMs));
+            return first.join().add(second.join());
+        }
     }
 }
