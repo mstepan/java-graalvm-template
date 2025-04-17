@@ -6,11 +6,19 @@ import java.util.concurrent.RecursiveTask;
 
 public class AppMain {
 
+    private static final long BYTES_PER_GB = 1024L * 1024L * 1024L;
+
     public static void main(String[] args) throws Exception {
 
-        final int fibIndex = 1_000_000;
+        System.out.printf(
+                "Virtual threads count: %s%n",
+                System.getProperty("jdk.virtualThreadScheduler.parallelism"));
 
-        try (ForkJoinPool pool = new ForkJoinPool(2)) {
+        System.out.printf("Max heap: %.1f GB%n", (double) Runtime.getRuntime().maxMemory() / BYTES_PER_GB);
+
+        final int fibIndex = 20;
+
+        try (ForkJoinPool pool = new ForkJoinPool(4)) {
             BigInteger fibResult = pool.submit(new FibonacciTask(fibIndex)).join();
             System.out.printf("fib(%d): %d%n", fibIndex, fibResult);
         }

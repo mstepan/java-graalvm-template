@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
-JVM_OPTIONS="-Xms1G -Xmx1G -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1"
+JVM_THREADS="-Djdk.virtualThreadScheduler.parallelism=4 -Djdk.traceVirtualThreadLocals -Djdk.tracePinnedThreads=full"
+JVM_HEAP="-Xms1G -Xmx1G"
+JVM_JMX="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1"
 
-java $JVM_OPTIONS --enable-preview -jar target/java23-graalvm-template-0.0.1-SNAPSHOT.jar
+JVM_OPTS="$JVM_THREADS $JVM_HEAP $JVM_JMX"
+
+java $JVM_OPTS --enable-preview -jar target/java23-graalvm-template-0.0.1-SNAPSHOT.jar
