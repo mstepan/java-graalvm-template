@@ -1,43 +1,40 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.scopes.RateLimiterTaskScope;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.StructuredTaskScope;
 
 public class AppMain {
 
+    private static final ScopedValue<String> USERNAME_SCOPED = ScopedValue.newInstance();
+    private static final ScopedValue<String> ROLE_SCOPED = ScopedValue.newInstance();
+
     public static void main(String[] args) throws Exception {
 
-        try (RateLimiterTaskScope scope = new RateLimiterTaskScope(2)) {
-            for (int i = 0; i < 10; ++i) {
-                final int idx = i;
-                scope.fork(
+        ScopedValue.where(USERNAME_SCOPED, "Maksym")
+                .where(ROLE_SCOPED, "ADMIN")
+                .run(
                         () -> {
-                            search(idx);
-                            return null;
+                            try (StructuredTaskScope.ShutdownOnFailure scope =
+                                    new StructuredTaskScope.ShutdownOnFailure()) {
+
+                                for (int i = 0; i < 4; ++i) {
+                                    final int id = i;
+                                    scope.fork(
+                                            () -> {
+                                                System.out.printf(
+                                                        "Task-%d, User: %s, Role: %s%n",
+                                                        id,
+                                                        USERNAME_SCOPED.get(),
+                                                        ROLE_SCOPED.get());
+                                                return null;
+                                            });
+                                }
+
+                                scope.join().throwIfFailed();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
                         });
-            }
-            scope.join();
-        }
 
-        System.out.println("Main done...");
-    }
-
-    record SearchResult(String value) {}
-
-    public static SearchResult search(int idx) {
-
-        System.out.println("Search result started: " + idx);
-
-        try {
-            //            ThreadLocalRandom rand = ThreadLocalRandom.current();
-            TimeUnit.SECONDS.sleep(1L);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            System.out.printf("Search with idx %d interrupted%n", idx);
-        }
-
-        System.out.println("Search result completed: " + idx);
-
-        return new SearchResult("search-result-" + idx);
+        System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
     }
 }
