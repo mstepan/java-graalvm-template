@@ -1,4 +1,4 @@
-package com.github.mstepan.template;
+package com.github.mstepan.template.pool;
 
 import java.util.concurrent.*;
 
