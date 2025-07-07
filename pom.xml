@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.mstepan</groupId>
-    <artifactId>java23-graalvm-template</artifactId>
+    <artifactId>java-graalvm-template</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Java version -->
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>24</maven.compiler.source>
+        <maven.compiler.target>24</maven.compiler.target>
 
         <!-- 3rd party dependencies -->
 
@@ -238,7 +238,6 @@
                     <nvdApiKey>${nvd_api_key}</nvdApiKey>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 

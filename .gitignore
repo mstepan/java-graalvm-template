@@ -16,6 +16,9 @@ dependency-reduced-pom.xml
 # VS Code files
 .vscode/
 
+# Oracle Code Assist
+.oca/
+
 # Log file
 *.log
 

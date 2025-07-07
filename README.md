@@ -1,10 +1,10 @@
-# Java23 with GraalVM native image template
+# Java with GraalVM native image template
 
-* Written in `Java 23`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
+* Written in `Java 24`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
 * Maven `v3.9.9` with the [wrapper](https://maven.apache.org/wrapper/)
 * Compiled to native executable using [GraalVM](https://www.graalvm.org/)
-* Uses [virtual threads](https://docs.oracle.com/en/java/javase/23/core/virtual-threads.html)
-  and [structured concurrency](https://docs.oracle.com/en/java/javase/23/core/structured-concurrency.html)
+* Uses [virtual threads](https://docs.oracle.com/en/java/javase/24/core/virtual-threads.html)
+  and [structured concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html)
 * Uses [Error Prone](https://errorprone.info/) as an additional compiler to `javac`.
 * Uses [Spotless](https://github.com/diffplug/spotless/) for automatic code formatting
   in [Android Open Source Project](https://source.android.com/docs/setup/contribute/code-style) style.
@@ -22,11 +22,10 @@
 
 * Run application
   Pay attention that we also need to provide `--enable-preview` during runtime because we have used
-  [Structured Concurrency](https://docs.oracle.com/en/java/javase/23/core/structured-concurrency.html) which is in a
-  preview mode for java 23.
+  [Structured Concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html) which is in a preview mode for java 24.
 
 ```bash
-java --enable-preview -jar target/java23-graalvm-template-0.0.1-SNAPSHOT.jar 
+./run.sh
 ```
 
 ### Native image
@@ -44,9 +43,9 @@ It's necessary for the native image compilation.
 * Run native executable (Windows or Unix)
 
 ```bash
-./target/java23-graalvm-template.exe
+./target/java-graalvm-template.exe
 
-./target/java23-graalvm-template
+./target/java-graalvm-template
 ```
 
 ## Quality checks

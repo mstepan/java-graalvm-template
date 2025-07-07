@@ -6,4 +6,4 @@ JVM_JMX="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.onl
 
 JVM_OPTS="$JVM_THREADS $JVM_HEAP $JVM_JMX"
 
-java $JVM_OPTS --enable-preview -jar target/java23-graalvm-template-0.0.1-SNAPSHOT.jar
+java $JVM_OPTS --enable-preview -jar target/java-graalvm-template-0.0.1-SNAPSHOT.jar
