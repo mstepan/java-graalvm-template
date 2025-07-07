@@ -13,9 +13,6 @@ dependency-reduced-pom.xml
 .idea/
 *.iml
 
-# VS Code files
-.vscode/
-
 # Oracle Code Assist
 .oca/
 

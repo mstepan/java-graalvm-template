@@ -1,39 +1,41 @@
 package com.github.mstepan.template;
 
-import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.TimeUnit;
 
 public class AppMain {
 
-    private static final ScopedValue<String> USERNAME_SCOPED = ScopedValue.newInstance();
-    private static final ScopedValue<String> ROLE_SCOPED = ScopedValue.newInstance();
-
     public static void main(String[] args) throws Exception {
 
-        ScopedValue.where(USERNAME_SCOPED, "Maksym")
-                .where(ROLE_SCOPED, "ADMIN")
-                .run(
-                        () -> {
-                            try (StructuredTaskScope.ShutdownOnFailure scope =
-                                    new StructuredTaskScope.ShutdownOnFailure()) {
+        Thread th =
+                Thread.ofVirtual()
+                        .start(
+                                () -> {
+                                    long startTime = System.currentTimeMillis();
 
-                                for (int i = 0; i < 4; ++i) {
-                                    final int id = i;
-                                    scope.fork(
-                                            () -> {
-                                                System.out.printf(
-                                                        "Task-%d, User: %s, Role: %s%n",
-                                                        id,
-                                                        USERNAME_SCOPED.get(),
-                                                        ROLE_SCOPED.get());
-                                                return null;
-                                            });
-                                }
+                                    System.out.println("Virtual thread started");
 
-                                scope.join().throwIfFailed();
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        });
+                                    try {
+                                        TimeUnit.MILLISECONDS.sleep(250L);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        System.out.println("Virtual thread interrupted");
+                                    }
+
+                                    System.out.println("Virtual thread ended");
+
+                                    long endTime = System.currentTimeMillis();
+
+                                    System.out.printf(
+                                            "Elapsed time: %d ms%n", (endTime - startTime));
+                                });
+
+        th.join();
+
+        double maxRamInGb = ((double) Runtime.getRuntime().maxMemory()) / 1024.0 / 1024.0 / 1024.0;
+
+        System.out.printf("Max ram: %.1f GB%n", maxRamInGb);
+
+        TimeUnit.SECONDS.sleep(300000000L);
 
         System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
     }
