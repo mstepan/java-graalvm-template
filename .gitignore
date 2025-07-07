@@ -4,14 +4,17 @@
 *.class
 
 # Maven target folder
-target
+target/
 
 # Maven shaded plugin generated file
 dependency-reduced-pom.xml
 
 # IntelliJ IDEA files
-.idea
+.idea/
 *.iml
+
+# VS Code files
+.vscode/
 
 # Log file
 *.log
