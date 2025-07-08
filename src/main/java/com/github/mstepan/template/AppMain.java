@@ -1,42 +1,52 @@
 package com.github.mstepan.template;
 
+import com.github.mstepan.template.scopes.AtLeastOneCompleted;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class AppMain {
 
     public static void main(String[] args) throws Exception {
 
-        Thread th =
-                Thread.ofVirtual()
-                        .start(
-                                () -> {
-                                    long startTime = System.currentTimeMillis();
+        try (AtLeastOneCompleted<Long> scope = new AtLeastOneCompleted<>()) {
+            scope.fork(
+                    new Task("Task-1", 1L, new IllegalStateException("Task-1 custom exception")));
+            scope.fork(new Task("Task-2", 2L, null));
+            scope.fork(new Task("Task-3", 3L, null));
 
-                                    System.out.println("Virtual thread started");
+            scope.join();
+            scope.showExceptionsIfAny();
 
-                                    try {
-                                        TimeUnit.MILLISECONDS.sleep(250L);
-                                    } catch (InterruptedException e) {
-                                        Thread.currentThread().interrupt();
-                                        System.out.println("Virtual thread interrupted");
-                                    }
-
-                                    System.out.println("Virtual thread ended");
-
-                                    long endTime = System.currentTimeMillis();
-
-                                    System.out.printf(
-                                            "Elapsed time: %d ms%n", (endTime - startTime));
-                                });
-
-        th.join();
-
-        double maxRamInGb = ((double) Runtime.getRuntime().maxMemory()) / 1024.0 / 1024.0 / 1024.0;
-
-        System.out.printf("Max ram: %.1f GB%n", maxRamInGb);
-
-        TimeUnit.SECONDS.sleep(300000000L);
+            System.out.printf("result: %d%n", scope.getResult());
+        }
 
         System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
+    }
+
+    static class Task implements Callable<Long> {
+
+        private final String taskName;
+        private final long sleepDelay;
+        private final Exception customException;
+
+        public Task(String taskName, long sleepDelay, Exception customException) {
+            this.taskName = taskName;
+            this.sleepDelay = sleepDelay;
+            this.customException = customException;
+        }
+
+        @Override
+        public Long call() throws Exception {
+            try {
+                TimeUnit.SECONDS.sleep(sleepDelay);
+                if (customException != null) {
+                    throw customException;
+                }
+            } catch (InterruptedException interEx) {
+                Thread.currentThread().interrupt();
+                System.out.printf("%s interrupted%n", taskName);
+            }
+            return sleepDelay;
+        }
     }
 }
