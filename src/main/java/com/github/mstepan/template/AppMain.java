@@ -1,23 +1,37 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.scopes.AtLeastOneCompleted;
+import java.time.Instant;
 import java.util.concurrent.Callable;
+import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.TimeUnit;
 
 public class AppMain {
 
     public static void main(String[] args) throws Exception {
-
-        try (AtLeastOneCompleted<Long> scope = new AtLeastOneCompleted<>()) {
+        try (var scope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
             scope.fork(
-                    new Task("Task-1", 1L, new IllegalStateException("Task-1 custom exception")));
-            scope.fork(new Task("Task-2", 2L, null));
-            scope.fork(new Task("Task-3", 3L, null));
+                    () -> {
+                        try (var outerScope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
+                            outerScope.fork(
+                                    () -> {
+                                        TimeUnit.MILLISECONDS.sleep(500L);
+                                        return "hello from 1";
+                                    });
+
+                            outerScope.joinUntil(Instant.now().plusSeconds(1L));
+                            return outerScope.result();
+                        }
+                    });
+
+            scope.fork(
+                    () -> {
+                        TimeUnit.SECONDS.sleep(3L);
+                        return "hello from 2";
+                    });
 
             scope.join();
-            scope.showExceptionsIfAny();
 
-            System.out.printf("result: %d%n", scope.getResult());
+            System.out.printf("result: %s%n", scope.result());
         }
 
         System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
