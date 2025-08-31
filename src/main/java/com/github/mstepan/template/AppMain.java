@@ -1,66 +1,41 @@
 package com.github.mstepan.template;
 
-import java.time.Instant;
-import java.util.concurrent.Callable;
+import com.github.mstepan.template.probabalistic.CountMinSketch;
 import java.util.concurrent.StructuredTaskScope;
-import java.util.concurrent.TimeUnit;
 
 public class AppMain {
 
+    @SuppressWarnings("preview")
     public static void main(String[] args) throws Exception {
+
+        final CountMinSketch<String> sketch = new CountMinSketch<>();
+
         try (var scope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
-            scope.fork(
-                    () -> {
-                        try (var outerScope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
-                            outerScope.fork(
-                                    () -> {
-                                        TimeUnit.MILLISECONDS.sleep(500L);
-                                        return "hello from 1";
-                                    });
 
-                            outerScope.joinUntil(Instant.now().plusSeconds(1L));
-                            return outerScope.result();
-                        }
-                    });
+            for (int threadsIdx = 0; threadsIdx < 5; ++threadsIdx) {
+                scope.fork(
+                        () -> {
+                            for (int it = 0; it < 100; ++it) {
+                                sketch.add("hello");
+                            }
 
-            scope.fork(
-                    () -> {
-                        TimeUnit.SECONDS.sleep(3L);
-                        return "hello from 2";
-                    });
+                            for (int it = 0; it < 100; ++it) {
+                                sketch.add("world");
+                            }
+
+                            return null;
+                        });
+            }
 
             scope.join();
 
-            System.out.printf("result: %s%n", scope.result());
+            long helloFreq = sketch.countFrequency("hello");
+            System.out.printf("'hello' frequency: %d%n", helloFreq);
+
+            long worldFreq = sketch.countFrequency("world");
+            System.out.printf("'world' frequency: %d%n", worldFreq);
         }
 
         System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
-    }
-
-    static class Task implements Callable<Long> {
-
-        private final String taskName;
-        private final long sleepDelay;
-        private final Exception customException;
-
-        public Task(String taskName, long sleepDelay, Exception customException) {
-            this.taskName = taskName;
-            this.sleepDelay = sleepDelay;
-            this.customException = customException;
-        }
-
-        @Override
-        public Long call() throws Exception {
-            try {
-                TimeUnit.SECONDS.sleep(sleepDelay);
-                if (customException != null) {
-                    throw customException;
-                }
-            } catch (InterruptedException interEx) {
-                Thread.currentThread().interrupt();
-                System.out.printf("%s interrupted%n", taskName);
-            }
-            return sleepDelay;
-        }
     }
 }
