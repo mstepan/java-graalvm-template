@@ -10,16 +10,16 @@ public class AppMain {
 
         final CountMinSketch<String> sketch = new CountMinSketch<>();
 
-        try (var scope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
 
-            for (int threadsIdx = 0; threadsIdx < 5; ++threadsIdx) {
+            for (int threadsIdx = 0; threadsIdx < 100; ++threadsIdx) {
                 scope.fork(
                         () -> {
-                            for (int it = 0; it < 100; ++it) {
+                            for (int it = 0; it < 1000; ++it) {
                                 sketch.add("hello");
                             }
 
-                            for (int it = 0; it < 100; ++it) {
+                            for (int it = 0; it < 1000; ++it) {
                                 sketch.add("world");
                             }
 
@@ -28,6 +28,7 @@ public class AppMain {
             }
 
             scope.join();
+            scope.throwIfFailed();
 
             long helloFreq = sketch.countFrequency("hello");
             System.out.printf("'hello' frequency: %d%n", helloFreq);

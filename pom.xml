@@ -16,6 +16,7 @@
         <maven.compiler.target>24</maven.compiler.target>
 
         <!-- 3rd party dependencies -->
+        <junit.version>5.13.4</junit.version>
 
         <!-- ErrorProne (https://errorprone.info/) -->
         <error.prone.version>2.36.0</error.prone.version>
@@ -34,6 +35,9 @@
         <maven.spotbugs.plugin.version>4.9.0.0</maven.spotbugs.plugin.version>
         <spotbugs.version>4.9.1</spotbugs.version>
         <find.security.bugs.version>1.12.0</find.security.bugs.version>
+
+        <!-- Unit tests -->
+        <maven.surefire.plugin.version>3.5.3</maven.surefire.plugin.version>
 
         <!-- Maven other plugins -->
         <maven.compiler.plugin.version>3.12.1</maven.compiler.plugin.version>
@@ -238,6 +242,16 @@
                     <nvdApiKey>${nvd_api_key}</nvdApiKey>
                 </configuration>
             </plugin>
+
+            <!-- Unit tests plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <configuration>
+                    <argLine>--enable-preview</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -278,6 +292,18 @@
         </profile>
     </profiles>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <dependency>
@@ -286,6 +312,12 @@
             <version>3.0.1</version>
         </dependency>
 
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
