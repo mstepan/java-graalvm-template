@@ -11,28 +11,28 @@ import org.junit.jupiter.api.Test;
 public class CountMinSketchTest {
 
     @Test
-    void addAndCountFrequency() {
+    void addAndEstimateFrequency() {
         CountMinSketch<String> sketch = new CountMinSketch<>();
 
         for (int i = 0; i < 10; ++i) {
             sketch.add("hello");
         }
-        assertEqualsWithDeviation(10, sketch.countFrequency("hello"));
+        assertEqualsWithDeviation(10, sketch.estimateFrequency("hello"));
 
         for (int i = 0; i < 7; ++i) {
             sketch.add("world");
         }
-        assertEqualsWithDeviation(7, sketch.countFrequency("world"));
+        assertEqualsWithDeviation(7, sketch.estimateFrequency("world"));
 
         for (int i = 0; i < 13; ++i) {
             sketch.add("test-123");
         }
-        assertEqualsWithDeviation(13, sketch.countFrequency("test-123"));
+        assertEqualsWithDeviation(13, sketch.estimateFrequency("test-123"));
     }
 
     @SuppressWarnings("preview")
     @Test
-    void addAndCountFrequencyMultipleThreads() throws Exception {
+    void addAndEstimateFrequencyMultipleThreads() throws Exception {
         final int threadsCount = 64;
 
         final List<StringAndCount> stringsAndCounts = new ArrayList<>();
@@ -64,15 +64,10 @@ public class CountMinSketchTest {
 
         for (StringAndCount stringAndCount : stringsAndCounts) {
             long expectedFreq = ((long) stringAndCount.count()) * threadsCount;
-            long actualFreq = sketch.countFrequency(stringAndCount.value());
+            long actualFreq = sketch.estimateFrequency(stringAndCount.value());
 
             assertEqualsWithDeviation(expectedFreq, actualFreq);
         }
-    }
-
-    private void assertEqualsWithDeviation(long expectedFreq, long actualFreq) {
-        final double expectedDeviation = CountMinSketch.DEFAULT_ESTIMATED_ERROR; // 0.001
-        assertEquals((double) expectedFreq, (double) actualFreq, expectedDeviation);
     }
 
     record StringAndCount(String value, int count) {}
@@ -97,5 +92,10 @@ public class CountMinSketchTest {
         }
 
         return buf.toString();
+    }
+
+    private void assertEqualsWithDeviation(long expectedFreq, long actualFreq) {
+        final double expectedDeviation = CountMinSketch.DEFAULT_ESTIMATED_ERROR; // 0.001
+        assertEquals((double) expectedFreq, (double) actualFreq, expectedDeviation);
     }
 }

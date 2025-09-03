@@ -30,10 +30,10 @@ public class AppMain {
             scope.join();
             scope.throwIfFailed();
 
-            long helloFreq = sketch.countFrequency("hello");
+            long helloFreq = sketch.estimateFrequency("hello");
             System.out.printf("'hello' frequency: %d%n", helloFreq);
 
-            long worldFreq = sketch.countFrequency("world");
+            long worldFreq = sketch.estimateFrequency("world");
             System.out.printf("'world' frequency: %d%n", worldFreq);
         }
 

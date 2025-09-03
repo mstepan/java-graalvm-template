@@ -37,7 +37,7 @@ public final class CountMinSketch<T> {
         }
     }
 
-    public long countFrequency(T value) {
+    public long estimateFrequency(T value) {
         long minValue = Long.MAX_VALUE;
 
         for (int i = 0; i < rows; i++) {
