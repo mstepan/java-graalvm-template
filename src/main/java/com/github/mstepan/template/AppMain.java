@@ -1,6 +1,6 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.probabalistic.CountMinSketch;
+import com.github.mstepan.template.lock.BrokenSpinLockCounter;
 import java.util.concurrent.StructuredTaskScope;
 
 public class AppMain {
@@ -8,7 +8,7 @@ public class AppMain {
     @SuppressWarnings("preview")
     public static void main(String[] args) throws Exception {
 
-        final CountMinSketch<String> sketch = new CountMinSketch<>();
+        BrokenSpinLockCounter lockCounter = new BrokenSpinLockCounter();
 
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
 
@@ -16,13 +16,8 @@ public class AppMain {
                 scope.fork(
                         () -> {
                             for (int it = 0; it < 1000; ++it) {
-                                sketch.add("hello");
+                                lockCounter.incrementBroken();
                             }
-
-                            for (int it = 0; it < 1000; ++it) {
-                                sketch.add("world");
-                            }
-
                             return null;
                         });
             }
@@ -30,11 +25,7 @@ public class AppMain {
             scope.join();
             scope.throwIfFailed();
 
-            long helloFreq = sketch.estimateFrequency("hello");
-            System.out.printf("'hello' frequency: %d%n", helloFreq);
-
-            long worldFreq = sketch.estimateFrequency("world");
-            System.out.printf("'world' frequency: %d%n", worldFreq);
+            System.out.printf("Counter value: %d%n", lockCounter.count());
         }
 
         System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
