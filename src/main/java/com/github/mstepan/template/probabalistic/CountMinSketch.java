@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 /** Thread-safe count-min sketch implementation. */
 public final class CountMinSketch<T> {
 
-    private static final double DEFAULT_ESTIMATED_ERROR = 0.001; // 0.1%
+    static final double DEFAULT_ESTIMATED_ERROR = 0.001; // 0.1%
     private static final double DEFAULT_CONFIDENCE = 0.99999; // 99.999%
 
     private final int rows;
