@@ -28,7 +28,7 @@ public final class CountMinSketch<T> {
             hashes[i] = new Hash<>();
         }
 
-        System.out.printf("CountMinSketch size (rows x cols): %d x %d%n", rows, cols);
+        // System.out.printf("CountMinSketch size (rows x cols): %d x %d%n", rows, cols);
     }
 
     public void add(T value) {

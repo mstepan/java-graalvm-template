@@ -22,7 +22,8 @@
 
 * Run application
   Pay attention that we also need to provide `--enable-preview` during runtime because we have used
-  [Structured Concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html) which is in a preview mode for java 24.
+  [Structured Concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html) which is in a
+  preview mode for java 24.
 
 ```bash
 ./run.sh
@@ -37,7 +38,7 @@ installed.
 It's necessary for the native image compilation.
 
 ```bash
-./mvnw clean package -Pnative
+./mvnw clean package -Pnative -DskipTests
 ```
 
 * Run native executable (Windows or Unix)
