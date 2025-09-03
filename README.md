@@ -49,13 +49,10 @@ It's necessary for the native image compilation.
 ./target/java-graalvm-template
 ```
 
-## Quality checks
+## Vulnerability Scan
 
-### OWASP check dependencies for vulnerabilities
-
-* Run OWASP dependency checker. The OWASP checker attached to `check` maven phase that can be triggered using below
-  command:
+We will use [grype](https://github.com/anchore/grype) as our vulnerability scanner for CI and locally.
 
 ```bash
-./mvnw verify
+grype . --name java-graalvm-template
 ```
