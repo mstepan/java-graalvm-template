@@ -26,7 +26,9 @@ public class BrokenSpinLockCounter {
     @SuppressFBWarnings(
             value = {"VO_VOLATILE_INCREMENT", "AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"})
     public void increment() {
-        while (!LOCK_HANDLER.weakCompareAndSetAcquire(this, false, true)) {}
+        while (!LOCK_HANDLER.weakCompareAndSetAcquire(this, false, true)) {
+            Thread.onSpinWait();
+        }
 
         // below code execute by single thread as critical section
         count = count + 1;
@@ -41,7 +43,9 @@ public class BrokenSpinLockCounter {
     @SuppressFBWarnings(
             value = {"VO_VOLATILE_INCREMENT", "AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"})
     public void incrementBroken() {
-        while (!LOCK_HANDLER.weakCompareAndSet(this, false, true)) {}
+        while (!LOCK_HANDLER.weakCompareAndSet(this, false, true)) {
+            Thread.onSpinWait();
+        }
 
         // below code execute by single thread as critical section
         count = count + 1;

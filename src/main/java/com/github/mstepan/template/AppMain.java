@@ -6,7 +6,7 @@ import java.util.concurrent.StructuredTaskScope;
 public class AppMain {
 
     @SuppressWarnings("preview")
-    public static void main(String[] args) throws Exception {
+    static void main() throws Exception {
 
         BrokenSpinLockCounter lockCounter = new BrokenSpinLockCounter();
 
