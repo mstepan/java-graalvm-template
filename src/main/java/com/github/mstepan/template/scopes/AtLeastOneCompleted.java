@@ -50,15 +50,12 @@ public class AtLeastOneCompleted<T> implements StructuredTaskScope.Joiner<T, Str
      */
     @Override
     public Stream<T> result() {
+        showExceptionsIfAny();
         final T resValue = result.get();
         return (resValue == null) ? Stream.empty() : Stream.of(resValue);
     }
 
-    /**
-     * Prints messages of any recorded exceptions to standard error. No-op if no failures were
-     * recorded.
-     */
-    public void showExceptionsIfAny() {
+    private void showExceptionsIfAny() {
         for (Throwable singleEx : exceptions) {
             System.err.printf("Exception: '%s'%n", singleEx.getMessage());
         }

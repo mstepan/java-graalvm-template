@@ -1,4 +1,4 @@
-# Java with GraalVM native image template
+# Java with GraalVM 25 LTS native image template
 
 * Written in `Java 25 LTS`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
 * Maven `v3.9.9` with the [wrapper](https://maven.apache.org/wrapper/)
@@ -8,7 +8,7 @@
 * Uses [Error Prone](https://errorprone.info/) as an additional compiler to `javac`.
 * Uses [Spotless](https://github.com/diffplug/spotless/) for automatic code formatting
   in [Android Open Source Project](https://source.android.com/docs/setup/contribute/code-style) style.
-* Uses [OWASP dependency-check](https://owasp.org/www-project-dependency-check/) to detect CVEs inside dependencies.
+* Uses [grype](https://github.com/anchore/grype) to detect CVEs inside dependencies.
 
 ## Build & run
 
@@ -55,4 +55,19 @@ We will use [grype](https://github.com/anchore/grype) as our vulnerability scann
 
 ```bash
 grype . --name java-graalvm-template
+```
+
+Expected output:
+
+```
+ ✔ Indexed file system                                                                                                                  .
+ ✔ Cataloged contents 47be346d20a8cd65a0cf1689c66413d0193e7de65cde1e63a8f12efcc7b7e02f
+   ├── ✔ Packages                        [9 packages]
+   ├── ✔ File digests                    [0 files]
+   ├── ✔ Executables                     [0 executables]
+   └── ✔ File metadata                   [0 locations]
+ ✔ Scanned for vulnerabilities     [0 vulnerability matches]
+   ├── by severity: 0 critical, 0 high, 0 medium, 0 low, 0 negligible
+   └── by status:   0 fixed, 0 not-fixed, 0 ignored
+No vulnerabilities found
 ```

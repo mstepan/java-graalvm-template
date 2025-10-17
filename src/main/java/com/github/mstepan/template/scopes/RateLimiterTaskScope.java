@@ -5,18 +5,44 @@ import java.util.concurrent.StructuredTaskScope;
 import java.util.stream.Stream;
 
 /**
- * Joiner that limits the number of concurrently running subtasks using a semaphore. A permit is
- * acquired in {@link #onFork(StructuredTaskScope.Subtask)} before delegating to the default
- * behavior and released in {@link #onComplete(StructuredTaskScope.Subtask)}, capping parallelism to
- * the number of available permits.
+ * A {@link java.util.concurrent.StructuredTaskScope.Joiner} that throttles the number of
+ * concurrently running subtasks using a {@link java.util.concurrent.Semaphore}.
  *
- * @param <T> the subtask result type
- * @param semaphore the semaphore that controls the maximum number of concurrent subtasks
- * @implNote Uses Java Structured Concurrency (preview) APIs.
+ * <p>Each time a subtask is forked, a permit is acquired; the permit is released when the subtask
+ * completes (whether normally or exceptionally). This effectively limits the degree of concurrency
+ * to the number of available permits.
+ *
+ * <p>This joiner does not aggregate results; its {@link #result()} always returns an empty stream.
+ *
+ * <p>Thread-safety: Instances are safe for concurrent use by {@link
+ * java.util.concurrent.StructuredTaskScope}.
+ *
+ * @param <T> the result type of the subtasks
+ * @see java.util.concurrent.Semaphore
+ * @see java.util.concurrent.StructuredTaskScope.Joiner
  */
 @SuppressWarnings({"preview", "unused"})
-public record RateLimiterTaskScope<T>(Semaphore semaphore)
-        implements StructuredTaskScope.Joiner<T, Stream<T>> {
+public final class RateLimiterTaskScope<T> implements StructuredTaskScope.Joiner<T, Stream<T>> {
+
+    private final Semaphore semaphore;
+
+    /**
+     * Creates a rate-limiting joiner with the given number of permits.
+     *
+     * @param permissionsCount the maximum number of subtasks allowed to run concurrently; must be >
+     *     0
+     * @throws IllegalArgumentException if {@code permissionsCount <= 0}
+     */
+    public RateLimiterTaskScope(int permissionsCount) {
+        if (permissionsCount <= 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "'permissionsCount' should be positive value,"
+                                    + "permissionsCount = %d",
+                            permissionsCount));
+        }
+        this.semaphore = new Semaphore(permissionsCount);
+    }
 
     /**
      * Acquires a permit before forking the given subtask and delegates to the default Joiner
