@@ -108,14 +108,14 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     @NotNull
     @Override
     public Set<Entry<K, V>> entrySet() {
-        Set<Entry<K, V>> entrySet = new HashSet<>(size);
+        Set<Entry<K, V>> result = new HashSet<>(size);
         for (SlotEntry<K, V> slotEntry : slots) {
             if (slotEntry != null) {
-                entrySet.add(new SimpleEntry<>(slotEntry.key, slotEntry.value));
+                result.add(new SimpleEntry<>(slotEntry.key, slotEntry.value));
             }
         }
 
-        return entrySet;
+        return result;
     }
 
     private void checkForNullKey(Object key) {
