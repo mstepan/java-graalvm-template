@@ -280,6 +280,84 @@ class RobinHoodHashMapTest {
         assertFalse(map.containsKey(new TestKey(24, sameHash)));
     }
 
+    @Test
+    void copyConstructorNullMapThrows() {
+        assertThrows(
+                IllegalArgumentException.class, () -> new RobinHoodHashMap<String, Integer>(null));
+    }
+
+    @Test
+    void copyConstructorCopiesAllEntriesAndSize() {
+        Map<String, Integer> src = new HashMap<>();
+        for (int i = 0; i < 10; i++) {
+            src.put("k" + i, i * i);
+        }
+
+        RobinHoodHashMap<String, Integer> copy = new RobinHoodHashMap<>(src);
+
+        assertEquals(src.size(), copy.size());
+        for (Map.Entry<String, Integer> e : src.entrySet()) {
+            assertTrue(copy.containsKey(e.getKey()));
+            assertEquals(e.getValue(), copy.get(e.getKey()));
+        }
+        // spot check
+        assertTrue(copy.containsKey("k5"));
+        assertEquals(25, copy.get("k5"));
+    }
+
+    @Test
+    void copyConstructorIndependenceBetweenSourceAndCopy() {
+        Map<String, Integer> src = new HashMap<>();
+        src.put("a", 1);
+        src.put("b", 2);
+
+        RobinHoodHashMap<String, Integer> copy = new RobinHoodHashMap<>(src);
+
+        // mutate source after copy
+        src.put("c", 3);
+        src.remove("a");
+
+        // copy must remain as originally copied
+        assertEquals(2, copy.size());
+        assertTrue(copy.containsKey("a"));
+        assertEquals(1, copy.get("a"));
+        assertTrue(copy.containsKey("b"));
+        assertEquals(2, copy.get("b"));
+        assertFalse(copy.containsKey("c"));
+        assertNull(copy.get("c"));
+
+        // mutate copy and verify source unaffected
+        copy.put("d", 4);
+        copy.remove("b");
+
+        assertEquals(2, src.size());
+        assertTrue(src.containsKey("b"));
+        assertEquals(2, src.get("b"));
+        assertTrue(src.containsKey("c"));
+        assertEquals(3, src.get("c"));
+        assertFalse(src.containsKey("d"));
+    }
+
+    @Test
+    void copyConstructorHandlesLargeMapWithResizesAndCollisions() {
+        final int sameHash = 99;
+
+        Map<TestKey, String> src = new HashMap<>();
+        for (int i = 0; i < 40; i++) {
+            src.put(new TestKey(i, sameHash), "v" + i);
+        }
+
+        RobinHoodHashMap<TestKey, String> copy = new RobinHoodHashMap<>(src);
+
+        assertEquals(src.size(), copy.size());
+
+        for (int i = 0; i < 40; i++) {
+            TestKey probe = new TestKey(i, sameHash);
+            assertTrue(copy.containsKey(probe), "Missing key " + probe);
+            assertEquals("v" + i, copy.get(probe));
+        }
+    }
+
     /** Helper key with controlled hashCode to craft collision scenarios. */
     private static final class TestKey {
         private final int id;

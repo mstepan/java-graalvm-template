@@ -7,8 +7,8 @@ import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Robin-Hood hashtable implementation.
- * https://www.cs.cornell.edu/courses/JavaAndDS/files/hashing_RobinHood.pdf
+ * Robin-Hood hashtable implementation. <a
+ * href="https://www.cs.cornell.edu/courses/JavaAndDS/files/hashing_RobinHood.pdf">...</a>
  *
  * <p>Instead of 'probe sequence length' we are using 'initial slot index'
  * (SlotEntry.initialSlotIdx)
@@ -260,12 +260,6 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
             this.key = key;
             this.value = value;
             this.initialSlotIdx = initialSlotIdx;
-        }
-
-        public void replaceWith(SlotEntry<? extends K, ? extends V> other) {
-            this.key = other.key;
-            this.value = other.value;
-            this.initialSlotIdx = other.initialSlotIdx;
         }
     }
 }
