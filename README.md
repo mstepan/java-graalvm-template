@@ -1,9 +1,9 @@
 # Java with GraalVM native image template
 
-* Written in `Java 24`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
+* Written in `Java 25 LTS`. Version specified inside `.sdkmanrc` file using [sdkman](https://sdkman.io/usage)
 * Maven `v3.9.9` with the [wrapper](https://maven.apache.org/wrapper/)
 * Compiled to native executable using [GraalVM](https://www.graalvm.org/)
-* Uses [virtual threads](https://docs.oracle.com/en/java/javase/24/core/virtual-threads.html)
+* Uses [virtual threads](https://docs.oracle.com/en/java/javase/25/core/virtual-threads.html)
   and [structured concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html)
 * Uses [Error Prone](https://errorprone.info/) as an additional compiler to `javac`.
 * Uses [Spotless](https://github.com/diffplug/spotless/) for automatic code formatting
@@ -22,8 +22,8 @@
 
 * Run application
   Pay attention that we also need to provide `--enable-preview` during runtime because we have used
-  [Structured Concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html) which is in a
-  preview mode for java 24.
+  [Structured Concurrency](https://docs.oracle.com/en/java/javase/25/core/structured-concurrency.html) which is in a
+  preview mode for java 25.
 
 ```bash
 ./run.sh

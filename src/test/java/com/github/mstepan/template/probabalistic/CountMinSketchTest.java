@@ -44,7 +44,7 @@ public class CountMinSketchTest {
 
         CountMinSketch<String> sketch = new CountMinSketch<>();
 
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+        try (var scope = StructuredTaskScope.open()) {
 
             for (int threadsIdx = 0; threadsIdx < threadsCount; ++threadsIdx) {
                 scope.fork(
@@ -59,7 +59,6 @@ public class CountMinSketchTest {
             }
 
             scope.join();
-            scope.throwIfFailed();
         }
 
         for (StringAndCount stringAndCount : stringsAndCounts) {

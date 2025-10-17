@@ -10,7 +10,7 @@ public class AppMain {
 
         BrokenSpinLockCounter lockCounter = new BrokenSpinLockCounter();
 
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+        try (var scope = StructuredTaskScope.open()) {
 
             for (int threadsIdx = 0; threadsIdx < 100; ++threadsIdx) {
                 scope.fork(
@@ -21,9 +21,7 @@ public class AppMain {
                             return null;
                         });
             }
-
             scope.join();
-            scope.throwIfFailed();
 
             System.out.printf("Counter value: %d%n", lockCounter.count());
         }
