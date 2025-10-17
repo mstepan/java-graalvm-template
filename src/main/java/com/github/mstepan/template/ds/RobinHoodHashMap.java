@@ -1,9 +1,19 @@
 package com.github.mstepan.template.ds;
 
 import java.util.AbstractMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
-public class RobinHoodHashMap<K, V> extends AbstractMap<K, V> {
+/**
+ * Robin-Hood hashtable implementation.
+ * https://www.cs.cornell.edu/courses/JavaAndDS/files/hashing_RobinHood.pdf
+ *
+ * <p>Instead of 'probe sequence length' we are using 'initial slot index'
+ * (SlotEntry.initialSlotIdx)
+ */
+public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     private static final int DEFAULT_CAPACITY = 8;
     private static final double DEFAULT_LOAD_FACTOR = 0.75;
@@ -14,11 +24,21 @@ public class RobinHoodHashMap<K, V> extends AbstractMap<K, V> {
 
     public RobinHoodHashMap() {}
 
+    public RobinHoodHashMap(Map<? extends K, ? extends V> otherMap) {
+        if (otherMap == null) {
+            throw new IllegalArgumentException("'otherMap' is null");
+        }
+
+        for (Map.Entry<? extends K, ? extends V> e : otherMap.entrySet()) {
+            K key = e.getKey();
+            V value = e.getValue();
+            put(key, value);
+        }
+    }
+
     @Override
     public V put(K initialKey, V initialValue) {
-        if (initialKey == null) {
-            throw new IllegalArgumentException("key can't be null");
-        }
+        checkForNullKey(initialKey);
 
         V prevValue = insertValue(initialKey, initialValue);
 
@@ -27,6 +47,81 @@ public class RobinHoodHashMap<K, V> extends AbstractMap<K, V> {
         }
 
         return prevValue;
+    }
+
+    @Override
+    public V get(Object key) {
+        checkForNullKey(key);
+
+        final int slotsMod = slots.length - 1;
+
+        final int keyInitialSlotIndex = hash(key) & slotsMod;
+
+        int slotIdx = keyInitialSlotIndex;
+        SlotEntry<K, V> cur = slots[slotIdx];
+
+        while (cur != null) {
+
+            // return from loop earlier if we found entry with initialSlotIdx > keyInitialSlotIndex
+            if (cur.initialSlotIdx > keyInitialSlotIndex) {
+                return null;
+            }
+
+            if (cur.key.equals(key)) {
+                return cur.value;
+            }
+
+            slotIdx = (slotIdx + 1) & slotsMod;
+            cur = slots[slotIdx];
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        return get(key) != null;
+    }
+
+    @Override
+    public V remove(Object key) {
+        // TODO:
+        return null;
+    }
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    @Override
+    public void clear() {
+        slots = allocateSlotsArray(DEFAULT_CAPACITY);
+        size = 0;
+    }
+
+    @NotNull
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        Set<Entry<K, V>> entrySet = new HashSet<>(size);
+        for (SlotEntry<K, V> slotEntry : slots) {
+            if (slotEntry != null) {
+                entrySet.add(new SimpleEntry<>(slotEntry.key, slotEntry.value));
+            }
+        }
+
+        return entrySet;
+    }
+
+    private void checkForNullKey(Object key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key can't be null");
+        }
     }
 
     private V insertValue(K initialKey, V initialValue) {
@@ -86,7 +181,7 @@ public class RobinHoodHashMap<K, V> extends AbstractMap<K, V> {
         return prevValue;
     }
 
-    private int hash(K key) {
+    private int hash(Object key) {
         return key.hashCode();
     }
 
@@ -104,22 +199,6 @@ public class RobinHoodHashMap<K, V> extends AbstractMap<K, V> {
 
     private double loadFactor() {
         return ((double) size) / slots.length;
-    }
-
-    @Override
-    public int size() {
-        return size;
-    }
-
-    @Override
-    public void clear() {
-        slots = allocateSlotsArray(DEFAULT_CAPACITY);
-        size = 0;
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-        return Set.of();
     }
 
     @SuppressWarnings("unchecked")

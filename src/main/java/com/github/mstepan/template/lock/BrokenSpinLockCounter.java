@@ -6,7 +6,9 @@ import java.lang.invoke.VarHandle;
 
 public class BrokenSpinLockCounter {
 
+    @SuppressWarnings("unused")
     private boolean locked;
+
     private volatile int count;
 
     private static final VarHandle LOCK_HANDLER;
@@ -25,6 +27,7 @@ public class BrokenSpinLockCounter {
 
     @SuppressFBWarnings(
             value = {"VO_VOLATILE_INCREMENT", "AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"})
+    @SuppressWarnings("NonAtomicVolatileUpdate")
     public void increment() {
         while (!LOCK_HANDLER.weakCompareAndSetAcquire(this, false, true)) {
             Thread.onSpinWait();
@@ -42,6 +45,7 @@ public class BrokenSpinLockCounter {
      */
     @SuppressFBWarnings(
             value = {"VO_VOLATILE_INCREMENT", "AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"})
+    @SuppressWarnings("NonAtomicVolatileUpdate")
     public void incrementBroken() {
         while (!LOCK_HANDLER.weakCompareAndSet(this, false, true)) {
             Thread.onSpinWait();
