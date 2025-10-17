@@ -53,6 +53,12 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     public V get(Object key) {
         checkForNullKey(key);
 
+        int idx = findEntryIndex(key);
+        return (idx == -1) ? null : slots[idx].value;
+    }
+
+    private int findEntryIndex(Object key) {
+
         final int slotsMod = slots.length - 1;
 
         final int keyInitialSlotIndex = hash(key) & slotsMod;
@@ -64,29 +70,59 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
 
             // return from loop earlier if we found entry with initialSlotIdx > keyInitialSlotIndex
             if (cur.initialSlotIdx > keyInitialSlotIndex) {
-                return null;
+                return -1;
             }
 
             if (cur.key.equals(key)) {
-                return cur.value;
+                return slotIdx;
             }
 
             slotIdx = (slotIdx + 1) & slotsMod;
             cur = slots[slotIdx];
         }
 
-        return null;
+        return -1;
     }
 
     @Override
     public boolean containsKey(Object key) {
-        return get(key) != null;
+        checkForNullKey(key);
+
+        return findEntryIndex(key) != -1;
     }
 
     @Override
     public V remove(Object key) {
-        // TODO:
-        return null;
+        checkForNullKey(key);
+
+        final int idx = findEntryIndex(key);
+
+        if (idx == -1) {
+            return null;
+        }
+        final V retValue = slots[idx].value;
+        slots[idx] = null;
+        --size;
+
+        final int slotsMod = slots.length - 1;
+
+        int prevIdx = idx;
+
+        for (int curIdx = (prevIdx + 1) & slotsMod;
+                slots[curIdx] != null;
+                curIdx = (curIdx + 1) & slotsMod) {
+
+            if (slots[curIdx].initialSlotIdx == curIdx) {
+                break;
+            }
+
+            slots[prevIdx] = slots[curIdx];
+            slots[curIdx] = null;
+
+            prevIdx = curIdx;
+        }
+
+        return retValue;
     }
 
     @Override
@@ -159,9 +195,7 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
                 int tempInitialSlotIdx = cur.initialSlotIdx;
 
                 // replace value in-place
-                cur.key = key;
-                cur.value = value;
-                cur.initialSlotIdx = initialSlotIdx;
+                cur.replaceValues(key, value, initialSlotIdx);
 
                 // move forward with insertion for swapped value
                 key = tempKey;
@@ -220,6 +254,18 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
         @Override
         public String toString() {
             return String.format("%s=%s, (%d)", key, value, initialSlotIdx);
+        }
+
+        public void replaceValues(K key, V value, int initialSlotIdx) {
+            this.key = key;
+            this.value = value;
+            this.initialSlotIdx = initialSlotIdx;
+        }
+
+        public void replaceWith(SlotEntry<? extends K, ? extends V> other) {
+            this.key = other.key;
+            this.value = other.value;
+            this.initialSlotIdx = other.initialSlotIdx;
         }
     }
 }
