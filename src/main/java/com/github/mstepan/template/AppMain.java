@@ -1,31 +1,68 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.lock.BrokenSpinLockCounter;
-import java.util.concurrent.StructuredTaskScope;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 public class AppMain {
 
-    @SuppressWarnings("preview")
-    static void main() throws Exception {
+    //    @SuppressWarnings("preview")
+    static void main() {
 
-        BrokenSpinLockCounter lockCounter = new BrokenSpinLockCounter();
+        final int tasksCount = 10_000;
 
-        try (var scope = StructuredTaskScope.open()) {
+        final Runnable ioTask =
+                () -> {
+                    try {
+                        Thread.sleep(250L);
+                    } catch (InterruptedException interEx) {
+                        Thread.currentThread().interrupt();
+                    }
+                };
 
-            for (int threadsIdx = 0; threadsIdx < 100; ++threadsIdx) {
-                scope.fork(
-                        () -> {
-                            for (int it = 0; it < 1000; ++it) {
-                                lockCounter.incrementBroken();
-                            }
-                            return null;
-                        });
-            }
-            scope.join();
+        measureThroughput(
+                "256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask, tasksCount);
+        measureThroughput(
+                "1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask, tasksCount);
+        measureThroughput(
+                "Virtual thread pool",
+                Executors.newVirtualThreadPerTaskExecutor(),
+                ioTask,
+                tasksCount);
+    }
 
-            System.out.printf("Counter value: %d%n", lockCounter.count());
+    /*
+    256 fixed thread pool ===============> Duration: 10030 ms, Throughput: 997.0 rps
+    1000 fixed thread pool ===============> Duration: 2625 ms, Throughput: 3809.5 rps
+    Virtual thread pool ===============> Duration: 321 ms, Throughput: 31152.6 rps
+     */
+    static void measureThroughput(
+            String title, ExecutorService pool, Runnable task, int numOfTasks) {
+
+        final AtomicInteger completedTasksCount = new AtomicInteger();
+        final Instant start = Instant.now();
+
+        try (pool) {
+            IntStream.range(0, numOfTasks)
+                    .forEach(
+                            _ -> {
+                                pool.execute(
+                                        () -> {
+                                            task.run();
+                                            completedTasksCount.incrementAndGet();
+                                        });
+                            });
         }
 
-        System.out.printf("Java version: %s. Main done...%n", System.getProperty("java.version"));
+        long durationInMs = Duration.between(start, Instant.now()).toMillis();
+
+        double throughput = (((double) completedTasksCount.get()) / durationInMs) * 1000.0;
+
+        System.out.printf(
+                "%30s: ===============> Duration: %d ms, Throughput: %.1f rps %n",
+                title, durationInMs, throughput);
     }
 }
