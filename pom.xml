@@ -17,6 +17,9 @@
 
         <!-- 3rd party dependencies -->
         <junit.version>5.13.4</junit.version>
+        
+        <!-- PostgreSQL JDBC -->
+        <postgresql.jdbc.version>42.7.4</postgresql.jdbc.version>
 
         <!-- ErrorProne (https://errorprone.info/) -->
         <error.prone.version>2.36.0</error.prone.version>
@@ -278,6 +281,13 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- PostgreSQL JDBC Driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.jdbc.version}</version>
         </dependency>
     </dependencies>
 
