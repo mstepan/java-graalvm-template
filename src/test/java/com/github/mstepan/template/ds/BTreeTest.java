@@ -113,6 +113,20 @@ public class BTreeTest {
     }
 
     @Test
+    void addNegativeAndPositiveInAscendingOrder() {
+        BTree tree = new BTree();
+
+        assertTrue(tree.add(-10));
+        assertTrue(tree.add(-5));
+        assertTrue(tree.add(-1));
+        assertTrue(tree.add(0));
+        assertTrue(tree.add(1));
+        assertTrue(tree.add(5));
+        assertTrue(tree.add(10));
+        assertTrue(tree.add(15));
+    }
+
+    @Test
     void insertNegativeZeroPositive() {
         BTree tree = new BTree();
 

@@ -33,12 +33,24 @@ public class BTree {
                 parent = root;
             }
 
-            cur.parent = null;
-
+            // assign parent references for new children
             splitInfo.left.parent = parent;
             splitInfo.right.parent = parent;
 
+            // Insert separator into parent and correctly shift child pointers
+            int prevKeys = parent.keysLength;
             int insertIdx = parent.insertKey(splitInfo.splitKey);
+
+            // shift children to make room for the new right child at insertIdx + 1
+            if (prevKeys - insertIdx >= 0) {
+                System.arraycopy(
+                        parent.children,
+                        insertIdx + 1,
+                        parent.children,
+                        insertIdx + 2,
+                        prevKeys - insertIdx);
+            }
+
             parent.children[insertIdx] = splitInfo.left;
             parent.children[insertIdx + 1] = splitInfo.right;
 
@@ -144,7 +156,13 @@ public class BTree {
                 left.keys[i] = keys[i];
                 left.keysLength++;
             }
+            // move children pointers
             System.arraycopy(children, 0, left.children, 0, mid + 1);
+            for (LevelNode child : left.children) {
+                if (child != null) {
+                    child.parent = left;
+                }
+            }
 
             LevelNode right = new LevelNode();
             for (int offset = (mid + (type == SplitType.LEAF ? 0 : 1)), i = 0;
@@ -156,7 +174,13 @@ public class BTree {
                 right.keysLength++;
             }
 
+            // move children pointers
             System.arraycopy(children, mid + 1, right.children, 0, children.length - (mid + 1));
+            for (LevelNode child : right.children) {
+                if (child != null) {
+                    child.parent = right;
+                }
+            }
 
             return new SplitInfo(keys[mid], left, right);
         }
