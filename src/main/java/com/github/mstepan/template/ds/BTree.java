@@ -28,7 +28,7 @@ public class BTree {
             SplitInfo splitInfo = cur.split(cur.isLeaf() ? SplitType.LEAF : SplitType.INTERNAL);
 
             if (parent == null) {
-                // splitting root
+                // root is full, we should split it
                 root = new LevelNode();
                 parent = root;
             }
