@@ -3,6 +3,10 @@ package com.github.mstepan.template.ds;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 public class BTreeTest {
@@ -149,5 +153,56 @@ public class BTreeTest {
         assertFalse(tree.add(0));
         assertFalse(tree.add(-10));
         assertFalse(tree.add(15));
+    }
+
+    @Test
+    void insertManyRandomAndQuery() {
+        BTree tree = new BTree();
+
+        int n = 1000;
+        List<Integer> vals = new ArrayList<>(n);
+        for (int i = 1; i <= n; i++) {
+            vals.add(i);
+        }
+
+        Collections.shuffle(vals, new Random(42));
+        for (int v : vals) {
+            assertTrue(tree.add(v));
+        }
+
+        Collections.shuffle(vals, new Random(7));
+        for (int v : vals) {
+            assertTrue(tree.contains(v));
+        }
+
+        int[] samples = {1, 2, 3, 10, 100, 500, 999, 1000};
+        for (int s : samples) {
+            assertFalse(tree.add(s));
+        }
+
+        assertFalse(tree.contains(-1));
+        assertFalse(tree.contains(n + 1));
+    }
+
+    @Test
+    void insertManySequentialLarge() {
+        BTree tree = new BTree();
+
+        int n = 1500;
+        for (int i = 1; i <= n; i++) {
+            assertTrue(tree.add(i));
+        }
+
+        for (int i = 1; i <= n; i++) {
+            assertTrue(tree.contains(i));
+        }
+
+        assertFalse(tree.contains(0));
+        assertFalse(tree.contains(n + 1));
+
+        // spot-check duplicates at different ranges
+        assertFalse(tree.add(1));
+        assertFalse(tree.add(n));
+        assertFalse(tree.add(n / 2));
     }
 }
