@@ -25,33 +25,26 @@ public class BTree {
 
             LevelNode parent = cur.parent;
 
+            SplitInfo splitInfo = cur.split(cur.isLeaf() ? SplitType.LEAF : SplitType.INTERNAL);
+
             if (parent == null) {
                 // splitting root
-                SplitInfo splitInfo = cur.split(SplitType.ORDINARY);
-
-                root = new LevelNode(splitInfo.splitKey);
-                cur = root;
-            } else {
-                // splitting non root
-                SplitInfo splitInfo = cur.split(SplitType.ORDINARY);
-
-                cur.parent = null;
-
-                splitInfo.left.parent = parent;
-                splitInfo.right.parent = parent;
-
-                int insertIdx = parent.insertKey(splitInfo.splitKey);
-                parent.children[insertIdx] = splitInfo.left;
-                parent.children[insertIdx + 1] = splitInfo.right;
-
-                cur = parent;
-
+                root = new LevelNode();
+                parent = root;
             }
 
+            cur.parent = null;
 
+            splitInfo.left.parent = parent;
+            splitInfo.right.parent = parent;
+
+            int insertIdx = parent.insertKey(splitInfo.splitKey);
+            parent.children[insertIdx] = splitInfo.left;
+            parent.children[insertIdx + 1] = splitInfo.right;
+
+            cur = parent;
         }
         return true;
-
     }
 
     public boolean contains(int key) {
@@ -94,7 +87,6 @@ public class BTree {
             keysLength++;
         }
 
-
         int[] keys;
         int keysLength;
 
@@ -117,7 +109,6 @@ public class BTree {
                 return 0;
             }
 
-
             int idx = keysLength - 1;
 
             while (idx >= 0 && keys[idx] >= key) {
@@ -138,7 +129,7 @@ public class BTree {
 
         @Override
         public String toString() {
-            return Arrays.toString(keys);
+            return Arrays.toString(keys) + " => " + (isLeaf() ? "LEAF" : "INTERNAL");
         }
 
         public boolean isFull() {
@@ -156,7 +147,9 @@ public class BTree {
             System.arraycopy(children, 0, left.children, 0, mid + 1);
 
             LevelNode right = new LevelNode();
-            for (int offset = mid + (type == SplitType.ROOT ? 1 : 0), i = 0; offset < keysLength; ++offset, ++i) {
+            for (int offset = (mid + (type == SplitType.LEAF ? 0 : 1)), i = 0;
+                    offset < keysLength;
+                    ++offset, ++i) {
                 assert i < right.keys.length;
 
                 right.keys[i] = keys[offset];
@@ -170,11 +163,9 @@ public class BTree {
     }
 
     enum SplitType {
-        ROOT,
-        ORDINARY,
+        INTERNAL,
+        LEAF,
     }
 
-    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {
-    }
-
+    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {}
 }

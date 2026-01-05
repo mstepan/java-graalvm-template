@@ -1,9 +1,9 @@
 package com.github.mstepan.template.ds;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class BTreeTest {
 
@@ -39,5 +39,4 @@ public class BTreeTest {
         assertFalse(tree.contains(55));
         assertFalse(tree.contains(75));
     }
-
 }
