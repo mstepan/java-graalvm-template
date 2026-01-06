@@ -39,14 +39,7 @@ public class BTree<T> {
 
             LevelNode parent = traversalPath.isEmpty() ? null : traversalPath.pop();
 
-            SplitInfo splitInfo;
-            if (cur.isLeaf()) {
-                assert cur instanceof LeafNode;
-                splitInfo = ((LeafNode) cur).split();
-            } else {
-                assert cur instanceof InternalNode;
-                splitInfo = ((InternalNode) cur).split();
-            }
+            SplitInfo splitInfo = cur.split();
 
             if (parent == null) {
                 // root is full, we should split it
@@ -122,6 +115,8 @@ public class BTree<T> {
             length = 0;
         }
 
+        public abstract SplitInfo split();
+
         public abstract boolean isLeaf();
 
         public int findIndexForKey(int key) {
@@ -138,7 +133,6 @@ public class BTree<T> {
         }
     }
 
-    // 1. LeafNode with fields: int[] keys; Object[] values; int length;
     private static class LeafNode extends LevelNode {
 
         Object[] values;
@@ -153,12 +147,12 @@ public class BTree<T> {
             return true;
         }
 
-        public int insertKeyAndValue(int key, Object value) {
+        public void insertKeyAndValue(int key, Object value) {
             if (length == 0) {
                 keys[length] = key;
                 values[length] = value;
                 ++length;
-                return 0;
+                return;
             }
 
             int idx = length - 1;
@@ -166,7 +160,7 @@ public class BTree<T> {
             while (idx >= 0 && keys[idx] >= key) {
                 if (keys[idx] == key) {
                     values[idx] = value;
-                    return idx;
+                    return;
                 }
 
                 keys[idx + 1] = keys[idx];
@@ -178,10 +172,9 @@ public class BTree<T> {
             values[idx + 1] = value;
 
             ++length;
-
-            return idx + 1;
         }
 
+        @Override
         public SplitInfo split() {
             int mid = length / 2;
 
@@ -203,7 +196,6 @@ public class BTree<T> {
         }
     }
 
-    // 2. InternalNode with fields: int[] keys; int length; LevelNode[] children;
     private static class InternalNode extends LevelNode {
 
         LevelNode[] children;
@@ -243,6 +235,7 @@ public class BTree<T> {
             return idx + 1;
         }
 
+        @Override
         public SplitInfo split() {
             int mid = length / 2;
 
@@ -269,5 +262,6 @@ public class BTree<T> {
         }
     }
 
-    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {}
+    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {
+    }
 }
