@@ -231,4 +231,118 @@ public class BTreeTest {
         tree.add(mid, "dm1");
         assertEquals("dm1", tree.add(mid, "dm2"));
     }
+
+    @Test
+    void insertExactNodeCapacityThenSplitAndDuplicates() {
+        BTree<String> tree = new BTree<>();
+
+        // Fill exactly one node (KEYS_PER_NODE = 13) without split
+        for (int i = 1; i <= 13; i++) {
+            assertNull(tree.add(i, "v" + i));
+        }
+        for (int i = 1; i <= 13; i++) {
+            assertTrue(tree.contains(i));
+        }
+
+        // Next insert should trigger a split under the hood
+        assertNull(tree.add(14, "v14"));
+        for (int i = 1; i <= 14; i++) {
+            assertTrue(tree.contains(i));
+        }
+
+        // Update a key that likely went to the right child after split
+        tree.add(14, "dup1");
+        assertEquals("dup1", tree.add(14, "dup2"));
+
+        // Update a key that likely stayed in the left child
+        tree.add(1, "dupL1");
+        assertEquals("dupL1", tree.add(1, "dupL2"));
+    }
+
+    @Test
+    void extremeKeysMinAndMax() {
+        BTree<String> tree = new BTree<>();
+
+        assertNull(tree.add(Integer.MIN_VALUE, "min"));
+        assertNull(tree.add(-1, "m1"));
+        assertNull(tree.add(0, "z0"));
+        assertNull(tree.add(1, "p1"));
+        assertNull(tree.add(Integer.MAX_VALUE, "max"));
+
+        assertTrue(tree.contains(Integer.MIN_VALUE));
+        assertTrue(tree.contains(Integer.MAX_VALUE));
+        assertTrue(tree.contains(0));
+        assertFalse(tree.contains(2));
+        assertFalse(tree.contains(-2));
+
+        // Replace extremes
+        tree.add(Integer.MIN_VALUE, "MIN2");
+        assertEquals("MIN2", tree.add(Integer.MIN_VALUE, "MIN3"));
+
+        tree.add(Integer.MAX_VALUE, "MAX2");
+        assertEquals("MAX2", tree.add(Integer.MAX_VALUE, "MAX3"));
+    }
+
+    @Test
+    void interleavedInsertsAndUpdates() {
+        BTree<String> tree = new BTree<>();
+
+        String prev;
+        for (int i = 1; i <= 100; i++) {
+            assertNull(tree.add(i, "v" + i));
+
+            // Every 10th step, update some previous keys
+            if (i % 10 == 0) {
+                prev = tree.add(i, "u" + i);
+                // previous must be "v{i}"
+                assertEquals("v" + i, prev);
+
+                prev = tree.add(i - 5, "u" + (i - 5));
+                assertEquals("v" + (i - 5), prev);
+
+                // And second update returns the first updated value
+                assertEquals("u" + (i - 5), tree.add(i - 5, "w" + (i - 5)));
+            }
+        }
+
+        for (int i = 1; i <= 100; i++) {
+            assertTrue(tree.contains(i));
+        }
+    }
+
+    @Test
+    void containsFalseForDenseGaps() {
+        BTree<String> tree = new BTree<>();
+
+        // Insert even numbers
+        for (int i = 0; i <= 200; i += 2) {
+            assertNull(tree.add(i, "e" + i));
+        }
+
+        // All odd numbers should be absent
+        for (int i = 1; i < 200; i += 2) {
+            assertFalse(tree.contains(i));
+        }
+
+        // Borders
+        assertFalse(tree.contains(-1));
+        assertFalse(tree.contains(201));
+    }
+
+    @Test
+    void firstInsertAlwaysReturnsNullEvenAfterSplits() {
+        BTree<String> tree = new BTree<>();
+
+        // Insert many keys; each first insert must return null
+        for (int i = 1; i <= 500; i++) {
+            assertNull(tree.add(i, "v" + i));
+        }
+
+        // After tree has grown, verify duplicates return previous values
+        assertEquals("v1", tree.add(1, "x1"));
+        assertEquals("x1", tree.add(1, "y1"));
+
+        assertEquals("v500", tree.add(500, "x500"));
+        assertEquals("x500", tree.add(500, "y500"));
+    }
 }
