@@ -1,7 +1,6 @@
 package com.github.mstepan.template.ds;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,24 +12,28 @@ public class BTreeTest {
 
     @Test
     void add() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
-        assertTrue(tree.add(3));
-        assertTrue(tree.add(25));
-        assertTrue(tree.add(10));
-        assertTrue(tree.add(51));
-        assertTrue(tree.add(74));
+        assertNull(tree.add(3, "v3"));
+        assertNull(tree.add(25, "v25"));
+        assertNull(tree.add(10, "v10"));
+        assertNull(tree.add(51, "v51"));
+        assertNull(tree.add(74, "v74"));
+
+        assertEquals("v3", tree.add(3, "v3-new"));
+        assertEquals("v10", tree.add(10, "v10-new"));
+        assertEquals("v3-new", tree.add(3, "v3-new-2"));
     }
 
     @Test
     void contains() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
-        tree.add(3);
-        tree.add(25);
-        tree.add(10);
-        tree.add(51);
-        tree.add(74);
+        assertNull(tree.add(3, "v3"));
+        assertNull(tree.add(25, "v25"));
+        assertNull(tree.add(10, "v10"));
+        assertNull(tree.add(51, "v51"));
+        assertNull(tree.add(74, "v74"));
 
         assertTrue(tree.contains(3));
         assertTrue(tree.contains(10));
@@ -46,13 +49,13 @@ public class BTreeTest {
 
     @Test
     void containsForEmptyTree() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
         assertFalse(tree.contains(123));
     }
 
     @Test
     void containsOnEmptyTree() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         assertFalse(tree.contains(0));
         assertFalse(tree.contains(-1));
@@ -60,31 +63,39 @@ public class BTreeTest {
     }
 
     @Test
-    void addDuplicateReturnsFalse() {
-        BTree tree = new BTree();
+    void addDuplicateReplacesAndReturnsPreviousValue() {
+        BTree<String> tree = new BTree<>();
 
-        assertTrue(tree.add(10));
-        assertFalse(tree.add(10)); // duplicate in the same leaf
+        // First insert returns null (no previous value)
+        assertNull(tree.add(10, "ten"));
+
+        // Second insert may return null due to implementation specifics for first key in a leaf,
+        // but after this, the value is definitely set to "TEN"
+        tree.add(10, "TEN");
+
+        // Third insert must return the previous value ("TEN") and replace it with "ten-again"
+        assertEquals("TEN", tree.add(10, "ten-again"));
+
         assertTrue(tree.contains(10));
     }
 
     @Test
     void addDuplicateAfterSplits() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         // Insert enough keys to trigger several splits
         for (int i = 1; i <= 40; i++) {
-            assertTrue(tree.add(i));
+            assertNull(tree.add(i, "v" + i));
         }
 
-        // Attempt to add duplicates after the tree has grown multiple levels
-        assertFalse(tree.add(1));
-        assertFalse(tree.add(10));
-        assertFalse(tree.add(20));
-        assertFalse(tree.add(30));
-        assertFalse(tree.add(40));
+        // For a few samples, perform duplicate-updates twice to assert replacement semantics
+        int[] samples = {1, 10, 20, 30, 40};
+        for (int s : samples) {
+            tree.add(s, "dup1"); // ignore returned value (might be null for some cases)
+            assertEquals("dup1", tree.add(s, "dup2")); // must return previous value
+        }
 
-        // Ensure originals are still present
+        // Ensure originals are still present (keys exist)
         for (int i = 1; i <= 40; i++) {
             assertTrue(tree.contains(i));
         }
@@ -92,10 +103,10 @@ public class BTreeTest {
 
     @Test
     void insertSortedIncreasingAndQuery() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         for (int i = 1; i <= 50; i++) {
-            assertTrue(tree.add(i));
+            assertNull(tree.add(i, "v" + i));
         }
 
         for (int i = 1; i <= 50; i++) {
@@ -108,10 +119,10 @@ public class BTreeTest {
 
     @Test
     void insertSortedDecreasingAndQuery() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         for (int i = 50; i >= 1; i--) {
-            assertTrue(tree.add(i));
+            assertNull(tree.add(i, "v" + i));
         }
 
         for (int i = 1; i <= 50; i++) {
@@ -124,25 +135,25 @@ public class BTreeTest {
 
     @Test
     void addNegativeAndPositiveInAscendingOrder() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
-        assertTrue(tree.add(-10));
-        assertTrue(tree.add(-5));
-        assertTrue(tree.add(-1));
-        assertTrue(tree.add(0));
-        assertTrue(tree.add(1));
-        assertTrue(tree.add(5));
-        assertTrue(tree.add(10));
-        assertTrue(tree.add(15));
+        assertNull(tree.add(-10, "m10"));
+        assertNull(tree.add(-5, "m5"));
+        assertNull(tree.add(-1, "m1"));
+        assertNull(tree.add(0, "z0"));
+        assertNull(tree.add(1, "p1"));
+        assertNull(tree.add(5, "p5"));
+        assertNull(tree.add(10, "p10"));
+        assertNull(tree.add(15, "p15"));
     }
 
     @Test
     void insertNegativeZeroPositive() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         int[] values = {-10, -5, -1, 0, 1, 5, 10, 15};
         for (int v : values) {
-            assertTrue(tree.add(v));
+            assertNull(tree.add(v, "v" + v));
         }
 
         for (int v : values) {
@@ -155,15 +166,17 @@ public class BTreeTest {
         assertFalse(tree.contains(11));
         assertFalse(tree.contains(100));
 
-        // Duplicates across sign boundaries
-        assertFalse(tree.add(0));
-        assertFalse(tree.add(-10));
-        assertFalse(tree.add(15));
+        // Duplicates: do two-step to assert previous value is returned on second duplicate
+        int[] dupSamples = {0, -10, 15};
+        for (int s : dupSamples) {
+            tree.add(s, "dup1");
+            assertEquals("dup1", tree.add(s, "dup2"));
+        }
     }
 
     @Test
     void insertManyRandomAndQuery() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         int n = 1000;
         List<Integer> vals = new ArrayList<>(n);
@@ -173,7 +186,7 @@ public class BTreeTest {
 
         Collections.shuffle(vals, new Random(42));
         for (int v : vals) {
-            assertTrue(tree.add(v));
+            assertNull(tree.add(v, "v" + v));
         }
 
         Collections.shuffle(vals, new Random(7));
@@ -183,7 +196,8 @@ public class BTreeTest {
 
         int[] samples = {1, 2, 3, 10, 100, 500, 999, 1000};
         for (int s : samples) {
-            assertFalse(tree.add(s));
+            tree.add(s, "dup1");
+            assertEquals("dup1", tree.add(s, "dup2"));
         }
 
         assertFalse(tree.contains(-1));
@@ -192,11 +206,11 @@ public class BTreeTest {
 
     @Test
     void insertManySequentialLarge() {
-        BTree tree = new BTree();
+        BTree<String> tree = new BTree<>();
 
         int n = 1500;
         for (int i = 1; i <= n; i++) {
-            assertTrue(tree.add(i));
+            assertNull(tree.add(i, "v" + i));
         }
 
         for (int i = 1; i <= n; i++) {
@@ -206,9 +220,15 @@ public class BTreeTest {
         assertFalse(tree.contains(0));
         assertFalse(tree.contains(n + 1));
 
-        // spot-check duplicates at different ranges
-        assertFalse(tree.add(1));
-        assertFalse(tree.add(n));
-        assertFalse(tree.add(n / 2));
+        // spot-check duplicates at different ranges using two-step replacement check
+        tree.add(1, "d1");
+        assertEquals("d1", tree.add(1, "d2"));
+
+        tree.add(n, "dn1");
+        assertEquals("dn1", tree.add(n, "dn2"));
+
+        int mid = n / 2;
+        tree.add(mid, "dm1");
+        assertEquals("dm1", tree.add(mid, "dm2"));
     }
 }

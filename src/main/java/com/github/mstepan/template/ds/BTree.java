@@ -4,13 +4,14 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
 
-public class BTree {
+public class BTree<T> {
 
     private static final int KEYS_PER_NODE = 3;
 
     private LevelNode root = new LevelNode();
 
-    public boolean add(int key) {
+    @SuppressWarnings("unchecked")
+    public T add(int key, T value) {
 
         final Deque<LevelNode> traversalPath = findLeafNodeForKey(key);
         assert !traversalPath.isEmpty();
@@ -18,11 +19,17 @@ public class BTree {
         LevelNode candidateNode = traversalPath.pop();
         assert candidateNode.isLeaf();
 
-        if (candidateNode.findIndexForKey(key) >= 0) {
-            return false;
+        int keyIdx = candidateNode.findIndexForKey(key);
+
+        if (keyIdx >= 0) {
+            // key found, replace value and return old one
+            Object oldValue = candidateNode.values[keyIdx];
+            candidateNode.values[keyIdx] = value;
+
+            return (T) oldValue;
         }
 
-        candidateNode.insertKey(key);
+        candidateNode.insertKeyAndValue(key, value);
 
         LevelNode cur = candidateNode;
 
@@ -39,8 +46,8 @@ public class BTree {
             }
 
             // Insert separator into parent and correctly shift child pointers
-            int prevKeys = parent.keysLength;
-            int insertIdx = parent.insertKey(splitInfo.splitKey);
+            int prevKeys = parent.length;
+            int insertIdx = parent.insertKeyAndValue(splitInfo.splitKey, value);
 
             // shift children to make room for the new right child at insertIdx + 1
             if (prevKeys - insertIdx >= 0) {
@@ -57,7 +64,7 @@ public class BTree {
 
             cur = parent;
         }
-        return true;
+        return null;
     }
 
     public boolean contains(int key) {
@@ -96,13 +103,12 @@ public class BTree {
         return traversalPath;
     }
 
-    record NodeAndIndex(LevelNode node, int index) {}
-
     private static class LevelNode {
 
         LevelNode() {
             keys = new int[KEYS_PER_NODE];
-            keysLength = 0;
+            values = new Object[KEYS_PER_NODE];
+            length = 0;
 
             children = new LevelNode[KEYS_PER_NODE + 1];
         }
@@ -110,11 +116,13 @@ public class BTree {
         LevelNode(int key) {
             this();
             keys[0] = key;
-            keysLength++;
+            length++;
         }
 
+        // store 'keys' and 'values' in separate arrays for better locality
         int[] keys;
-        int keysLength;
+        Object[] values;
+        int length;
 
         LevelNode[] children;
 
@@ -123,20 +131,22 @@ public class BTree {
         }
 
         public int findIndexForKey(int key) {
-            return Arrays.binarySearch(keys, 0, keysLength, key);
+            return Arrays.binarySearch(keys, 0, length, key);
         }
 
-        public int insertKey(int key) {
-            if (keysLength == 0) {
-                keys[keysLength] = key;
-                ++keysLength;
+        public int insertKeyAndValue(int key, Object value) {
+            if (length == 0) {
+                keys[length] = key;
+                values[length] = value;
+                ++length;
                 return 0;
             }
 
-            int idx = keysLength - 1;
+            int idx = length - 1;
 
             while (idx >= 0 && keys[idx] >= key) {
                 if (keys[idx] == key) {
+                    values[idx] = value;
                     return idx;
                 }
 
@@ -145,8 +155,9 @@ public class BTree {
             }
 
             keys[idx + 1] = key;
+            values[idx + 1] = value;
 
-            ++keysLength;
+            ++length;
 
             return idx + 1;
         }
@@ -157,28 +168,30 @@ public class BTree {
         }
 
         public boolean isFull() {
-            return keys.length == keysLength;
+            return keys.length == length;
         }
 
         public SplitInfo split(SplitType type) {
-            int mid = keysLength / 2;
+            int mid = length / 2;
 
             LevelNode left = new LevelNode();
             for (int i = 0; i < mid; ++i) {
                 left.keys[i] = keys[i];
-                left.keysLength++;
+                left.values[i] = values[i];
+                left.length++;
             }
             // move children pointers
             System.arraycopy(children, 0, left.children, 0, mid + 1);
 
             LevelNode right = new LevelNode();
             for (int offset = (mid + (type == SplitType.LEAF ? 0 : 1)), i = 0;
-                    offset < keysLength;
+                    offset < length;
                     ++offset, ++i) {
                 assert i < right.keys.length;
 
                 right.keys[i] = keys[offset];
-                right.keysLength++;
+                right.values[i] = values[offset];
+                right.length++;
             }
 
             // move children pointers
