@@ -45,6 +45,12 @@ public class BTreeTest {
     }
 
     @Test
+    void containsForEmptyTree() {
+        BTree tree = new BTree();
+        assertFalse(tree.contains(123));
+    }
+
+    @Test
     void containsOnEmptyTree() {
         BTree tree = new BTree();
 

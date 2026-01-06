@@ -1,6 +1,8 @@
 package com.github.mstepan.template.ds;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 
 public class BTree {
 
@@ -9,8 +11,11 @@ public class BTree {
     private LevelNode root = new LevelNode();
 
     public boolean add(int key) {
-        LevelNode candidateNode = findLeafNodeForKey(key);
 
+        final Deque<LevelNode> traversalPath = findLeafNodeForKey(key);
+        assert !traversalPath.isEmpty();
+
+        LevelNode candidateNode = traversalPath.pop();
         assert candidateNode.isLeaf();
 
         if (candidateNode.findIndexForKey(key) >= 0) {
@@ -23,7 +28,7 @@ public class BTree {
 
         while (cur.isFull()) {
 
-            LevelNode parent = cur.parent;
+            LevelNode parent = traversalPath.isEmpty() ? null : traversalPath.pop();
 
             SplitInfo splitInfo = cur.split(cur.isLeaf() ? SplitType.LEAF : SplitType.INTERNAL);
 
@@ -32,10 +37,6 @@ public class BTree {
                 root = new LevelNode();
                 parent = root;
             }
-
-            // assign parent references for new children
-            splitInfo.left.parent = parent;
-            splitInfo.right.parent = parent;
 
             // Insert separator into parent and correctly shift child pointers
             int prevKeys = parent.keysLength;
@@ -60,29 +61,42 @@ public class BTree {
     }
 
     public boolean contains(int key) {
-        LevelNode candidateNode = findLeafNodeForKey(key);
+        Deque<LevelNode> traversalPath = findLeafNodeForKey(key);
+        assert !traversalPath.isEmpty();
+
+        LevelNode candidateNode = traversalPath.pop();
 
         int idx = candidateNode.findIndexForKey(key);
 
         return idx >= 0;
     }
 
-    private LevelNode findLeafNodeForKey(int key) {
-        LevelNode curNode = root;
+    private Deque<LevelNode> findLeafNodeForKey(int key) {
 
-        while (!curNode.isLeaf()) {
-            int idx = curNode.findIndexForKey(key);
+        Deque<LevelNode> traversalPath = new ArrayDeque<>();
+
+        LevelNode cur = root;
+
+        while (!cur.isLeaf()) {
+
+            int idx = cur.findIndexForKey(key);
 
             if (idx >= 0) {
-                curNode = curNode.children[idx + 1];
+                traversalPath.push(cur);
+                cur = cur.children[idx + 1];
             } else {
                 int insertionPoint = -(idx + 1);
-                curNode = curNode.children[insertionPoint];
+                traversalPath.push(cur);
+                cur = cur.children[insertionPoint];
             }
         }
 
-        return curNode;
+        traversalPath.push(cur);
+
+        return traversalPath;
     }
+
+    record NodeAndIndex(LevelNode node, int index) {}
 
     private static class LevelNode {
 
@@ -103,8 +117,6 @@ public class BTree {
         int keysLength;
 
         LevelNode[] children;
-
-        LevelNode parent;
 
         public boolean isLeaf() {
             return children[0] == null;
@@ -158,11 +170,6 @@ public class BTree {
             }
             // move children pointers
             System.arraycopy(children, 0, left.children, 0, mid + 1);
-            for (LevelNode child : left.children) {
-                if (child != null) {
-                    child.parent = left;
-                }
-            }
 
             LevelNode right = new LevelNode();
             for (int offset = (mid + (type == SplitType.LEAF ? 0 : 1)), i = 0;
@@ -176,11 +183,6 @@ public class BTree {
 
             // move children pointers
             System.arraycopy(children, mid + 1, right.children, 0, children.length - (mid + 1));
-            for (LevelNode child : right.children) {
-                if (child != null) {
-                    child.parent = right;
-                }
-            }
 
             return new SplitInfo(keys[mid], left, right);
         }
