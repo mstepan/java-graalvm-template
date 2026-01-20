@@ -262,6 +262,5 @@ public class BTree<T> {
         }
     }
 
-    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {
-    }
+    private record SplitInfo(int splitKey, LevelNode left, LevelNode right) {}
 }
