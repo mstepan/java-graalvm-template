@@ -1,38 +1,52 @@
 package com.github.mstepan.template;
 
+import com.github.mstepan.template.failire_detector.PhiAccrualFailureDetector;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class AppMain {
 
+
     //    @SuppressWarnings("preview")
     static void main() {
 
-        final int tasksCount = 10_000;
+        PhiAccrualFailureDetector phiAccrualFailureDetector = new PhiAccrualFailureDetector();
 
-        final Runnable ioTask =
-                () -> {
-                    try {
-                        Thread.sleep(250L);
-                    } catch (InterruptedException interEx) {
-                        Thread.currentThread().interrupt();
-                    }
-                };
+        double[] delays = {1.03, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0};
 
-        measureThroughput(
-                "256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask, tasksCount);
-        measureThroughput(
-                "1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask, tasksCount);
-        measureThroughput(
-                "Virtual thread pool",
-                Executors.newVirtualThreadPerTaskExecutor(),
-                ioTask,
-                tasksCount);
+        for (double delay : delays) {
+            phiAccrualFailureDetector.addDelay(delay);
+        }
+
+        double phi = phiAccrualFailureDetector.computePhi(5.6);
+        System.out.println(phi);
+
+//        final int tasksCount = 10_000;
+//
+//        final Runnable ioTask =
+//                () -> {
+//                    try {
+//                        Thread.sleep(250L);
+//                    } catch (InterruptedException interEx) {
+//                        Thread.currentThread().interrupt();
+//                    }
+//                };
+//
+//        measureThroughput(
+//                "256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask, tasksCount);
+//        measureThroughput(
+//                "1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask, tasksCount);
+//        measureThroughput(
+//                "Virtual thread pool",
+//                Executors.newVirtualThreadPerTaskExecutor(),
+//                ioTask,
+//                tasksCount);
     }
+
 
     /*
     256 fixed thread pool ===============> Duration: 10030 ms, Throughput: 997.0 rps
