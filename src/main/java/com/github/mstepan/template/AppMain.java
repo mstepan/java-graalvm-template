@@ -9,11 +9,10 @@ import java.util.stream.IntStream;
 
 public class AppMain {
 
+    private static final int TASKS_COUNT = 10_000;
+
     //    @SuppressWarnings("preview")
     static void main() {
-
-        final int tasksCount = 10_000;
-
         final Runnable ioTask =
                 () -> {
                     try {
@@ -23,15 +22,10 @@ public class AppMain {
                     }
                 };
 
+        measureThroughput("256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask);
+        measureThroughput("1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask);
         measureThroughput(
-                "256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask, tasksCount);
-        measureThroughput(
-                "1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask, tasksCount);
-        measureThroughput(
-                "Virtual thread pool",
-                Executors.newVirtualThreadPerTaskExecutor(),
-                ioTask,
-                tasksCount);
+                "Virtual thread pool", Executors.newVirtualThreadPerTaskExecutor(), ioTask);
     }
 
     /*
@@ -39,14 +33,13 @@ public class AppMain {
     1000 fixed thread pool ===============> Duration: 2625 ms, Throughput: 3809.5 rps
     Virtual thread pool ===============> Duration: 321 ms, Throughput: 31152.6 rps
      */
-    static void measureThroughput(
-            String title, ExecutorService pool, Runnable task, int numOfTasks) {
+    static void measureThroughput(String title, ExecutorService pool, Runnable task) {
 
         final AtomicInteger completedTasksCount = new AtomicInteger();
         final Instant start = Instant.now();
 
         try (pool) {
-            IntStream.range(0, numOfTasks)
+            IntStream.range(0, TASKS_COUNT)
                     .forEach(
                             _ -> {
                                 pool.execute(
