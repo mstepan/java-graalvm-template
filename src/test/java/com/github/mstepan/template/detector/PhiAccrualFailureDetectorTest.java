@@ -17,9 +17,9 @@ public class PhiAccrualFailureDetectorTest {
             phiAccrualFailureDetector.addDelay(Duration.ofMillis(delay));
         }
 
-        assertEquals(1.1, phiAccrualFailureDetector.computePhi(Duration.ofMillis(2000)), 0.1);
-        assertEquals(4.7, phiAccrualFailureDetector.computePhi(Duration.ofMillis(3000)), 0.1);
-        assertEquals(12.0, phiAccrualFailureDetector.computePhi(Duration.ofMillis(5000)), 0.1);
+        assertEquals(1.1, phiAccrualFailureDetector.computePhi(Duration.ofSeconds(2)), 0.1);
+        assertEquals(4.7, phiAccrualFailureDetector.computePhi(Duration.ofSeconds(3)), 0.1);
+        assertEquals(12.0, phiAccrualFailureDetector.computePhi(Duration.ofSeconds(5)), 0.1);
     }
 
     @Test
@@ -28,13 +28,13 @@ public class PhiAccrualFailureDetectorTest {
 
         // fewer than default minSamples (10)
         for (int i = 0; i < 9; i++) {
-            detector.addDelay(Duration.ofMillis(1000));
+            detector.addDelay(Duration.ofSeconds(1));
         }
-        assertEquals(0.0, detector.computePhi(Duration.ofMillis(1000)), 1e-9);
+        assertEquals(0.0, detector.computePhi(Duration.ofSeconds(1)), 1e-9);
 
         // reaching minSamples should produce non-zero phi
-        detector.addDelay(Duration.ofMillis(1000)); // 10th sample
-        double phiAtMean = detector.computePhi(Duration.ofMillis(1000));
+        detector.addDelay(Duration.ofSeconds(1)); // 10th sample
+        double phiAtMean = detector.computePhi(Duration.ofSeconds(1));
         // with z=0 -> P(X>mean)=0.5 -> phi ~= 0.3010
         assertEquals(0.301, phiAtMean, 0.05);
     }
@@ -49,7 +49,7 @@ public class PhiAccrualFailureDetectorTest {
 
         // warm up to avoid warm-up early return
         for (int i = 0; i < 10; i++) {
-            detector.addDelay(Duration.ofMillis(1000));
+            detector.addDelay(Duration.ofSeconds(1));
         }
         assertThrows(IllegalArgumentException.class, () -> detector.computePhi(Duration.ZERO));
         assertThrows(
@@ -62,11 +62,11 @@ public class PhiAccrualFailureDetectorTest {
 
         // fill window with 1000ms values (default window size = 100)
         for (int i = 0; i < 100; i++) {
-            detector.addDelay(Duration.ofMillis(1000));
+            detector.addDelay(Duration.ofSeconds(1));
         }
         // add 50 values of 2000ms -> last 100 contain 50 of 1000 and 50 of 2000, mean=1500
         for (int i = 0; i < 50; i++) {
-            detector.addDelay(Duration.ofMillis(2000));
+            detector.addDelay(Duration.ofSeconds(2));
         }
         double phiAtMean = detector.computePhi(Duration.ofMillis(1500));
         assertEquals(0.301, phiAtMean, 0.05);
@@ -80,8 +80,8 @@ public class PhiAccrualFailureDetectorTest {
             detector.addDelay(Duration.ofMillis(d));
         }
         double phi1500 = detector.computePhi(Duration.ofMillis(1500));
-        double phi2000 = detector.computePhi(Duration.ofMillis(2000));
-        double phi3000 = detector.computePhi(Duration.ofMillis(3000));
+        double phi2000 = detector.computePhi(Duration.ofSeconds(2));
+        double phi3000 = detector.computePhi(Duration.ofSeconds(3));
 
         assertTrue(phi1500 < phi2000);
         assertTrue(phi2000 < phi3000);

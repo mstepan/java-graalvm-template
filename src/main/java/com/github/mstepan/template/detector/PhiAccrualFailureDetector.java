@@ -158,7 +158,7 @@ public final class PhiAccrualFailureDetector {
     // Algorithm 26.2.17 in Abromowitz and Stegun, Handbook of Mathematical.
     private static double erf(double z) {
         final double t = 1.0 / (1.0 + 0.47047 * Math.abs(z));
-        final double poly = t * (0.3480242 + t * (-0.0958798 + t * (0.7478556)));
+        final double poly = t * (0.3480242 + t * (-0.0958798 + t * 0.7478556));
         final double ans = 1.0 - poly * Math.exp(-z * z);
         return z >= 0 ? ans : -ans;
     }
