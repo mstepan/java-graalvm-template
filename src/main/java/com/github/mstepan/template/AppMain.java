@@ -1,69 +1,59 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.notification.NotificationRequest;
+import com.github.mstepan.template.concurrent.AllSuccessfulOrFailWithRateLimiterJoiner;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
+import java.util.concurrent.StructuredTaskScope;
 
+@SuppressWarnings("preview")
 public class AppMain {
 
-    private static final int TASKS_COUNT = 10_000;
-
-    //    @SuppressWarnings("preview")
     static void main() {
 
-        NotificationRequest request = new NotificationRequest("id-123", null, "  ", "hello Maksym");
+        try (var scope =
+                StructuredTaskScope.open(new AllSuccessfulOrFailWithRateLimiterJoiner<>(3))) {
 
-        System.out.println(request.isValid());
+            for (int i = 0; i < 10; ++i) {
 
-        //        final Runnable ioTask =
-        //                () -> {
-        //                    try {
-        //                        Thread.sleep(250L);
-        //                    } catch (InterruptedException interEx) {
-        //                        Thread.currentThread().interrupt();
-        //                    }
-        //                };
-        //
-        //        measureThroughput("256 fixed thread pool", Executors.newFixedThreadPool(256),
-        // ioTask);
-        //        measureThroughput("1000 fixed thread pool", Executors.newFixedThreadPool(1000),
-        // ioTask);
-        //        measureThroughput(
-        //                "Virtual thread pool", Executors.newVirtualThreadPerTaskExecutor(),
-        // ioTask);
-    }
+                final int id = i;
 
-    /*
-    256 fixed thread pool ===============> Duration: 10030 ms, Throughput: 997.0 rps
-    1000 fixed thread pool ===============> Duration: 2625 ms, Throughput: 3809.5 rps
-    Virtual thread pool ===============> Duration: 321 ms, Throughput: 31152.6 rps
-     */
-    static void measureThroughput(String title, ExecutorService pool, Runnable task) {
+                var _ =
+                        scope.fork(
+                                () -> {
+                                    if (id == 5) {
+                                        System.out.println("Task will fail");
+                                        throw new ArithmeticException("Division by 0");
+                                    }
 
-        final AtomicInteger completedTasksCount = new AtomicInteger();
-        final Instant start = Instant.now();
+                                    System.out.printf(
+                                            "[%s] started%n", Thread.currentThread().threadId());
+                                    try {
+                                        Thread.sleep(Duration.ofSeconds(3L));
+                                    } catch (InterruptedException interEx) {
+                                        Thread.currentThread().interrupt();
+                                        System.out.println("Cancelled");
+                                    }
 
-        try (pool) {
-            IntStream.range(0, TASKS_COUNT)
-                    .forEach(
-                            _ -> {
-                                pool.execute(
-                                        () -> {
-                                            task.run();
-                                            completedTasksCount.incrementAndGet();
-                                        });
-                            });
+                                    System.out.printf(
+                                            "[%s] completed%n", Thread.currentThread().threadId());
+
+                                    return "result-" + id;
+                                });
+            }
+
+            var _ = scope.join();
+
+            System.out.println("All tasks completed");
+
+        } catch (StructuredTaskScope.FailedException failedEx) {
+            if (failedEx.getCause() != null) {
+                System.err.println(failedEx.getCause().getMessage());
+            } else {
+                System.err.println("Failed unknow cause");
+            }
+        } catch (InterruptedException interEx) {
+            Thread.currentThread().interrupt();
         }
 
-        long durationInMs = Duration.between(start, Instant.now()).toMillis();
-
-        double throughput = (((double) completedTasksCount.get()) / durationInMs) * 1000.0;
-
-        System.out.printf(
-                "%30s: ===============> Duration: %d ms, Throughput: %.1f rps %n",
-                title, durationInMs, throughput);
+        System.out.println("Main done...");
     }
 }
