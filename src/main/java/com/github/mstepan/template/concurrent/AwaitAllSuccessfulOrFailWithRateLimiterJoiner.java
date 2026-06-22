@@ -1,20 +1,19 @@
 package com.github.mstepan.template.concurrent;
 
-import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("preview")
-public final class AllSuccessfulOrFailWithRateLimiterJoiner<T>
-        implements StructuredTaskScope.Joiner<T, List<T>> {
+public final class AwaitAllSuccessfulOrFailWithRateLimiterJoiner<T>
+        implements StructuredTaskScope.Joiner<T, Void> {
 
     private static final int MAX_ALLOWED_COUNT = 10_000;
 
     private final Semaphore semaphore;
     private final AtomicReference<Throwable> firstFailure;
 
-    public AllSuccessfulOrFailWithRateLimiterJoiner(int allowedCount) {
+    public AwaitAllSuccessfulOrFailWithRateLimiterJoiner(int allowedCount) {
         if (allowedCount <= 0 || allowedCount > MAX_ALLOWED_COUNT) {
             throw new IllegalArgumentException(
                     "Semaphore allowed count should be in range [1...%d]"
@@ -34,6 +33,12 @@ public final class AllSuccessfulOrFailWithRateLimiterJoiner<T>
             semaphore.acquire();
         } catch (InterruptedException interEx) {
             Thread.currentThread().interrupt();
+            firstFailure.compareAndSet(null, interEx);
+            return true;
+        }
+
+        if (firstFailure.get() != null) {
+            semaphore.release();
             return true;
         }
 
@@ -59,7 +64,7 @@ public final class AllSuccessfulOrFailWithRateLimiterJoiner<T>
     }
 
     @Override
-    public List<T> result() throws Throwable {
+    public Void result() throws Throwable {
         Throwable failure = firstFailure.get();
         if (failure != null) {
             throw failure;

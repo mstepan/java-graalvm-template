@@ -1,6 +1,6 @@
 package com.github.mstepan.template;
 
-import com.github.mstepan.template.concurrent.AllSuccessfulOrFailWithRateLimiterJoiner;
+import com.github.mstepan.template.concurrent.AwaitAllSuccessfulOrFailWithRateLimiterJoiner;
 import java.time.Duration;
 import java.util.concurrent.StructuredTaskScope;
 
@@ -10,7 +10,7 @@ public class AppMain {
     static void main() {
 
         try (var scope =
-                StructuredTaskScope.open(new AllSuccessfulOrFailWithRateLimiterJoiner<>(3))) {
+                StructuredTaskScope.open(new AwaitAllSuccessfulOrFailWithRateLimiterJoiner<>(3))) {
 
             for (int i = 0; i < 10; ++i) {
 
