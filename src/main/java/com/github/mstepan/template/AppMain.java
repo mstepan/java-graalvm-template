@@ -1,9 +1,9 @@
 package com.github.mstepan.template;
 
+import com.github.mstepan.template.notification.NotificationRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -13,19 +13,27 @@ public class AppMain {
 
     //    @SuppressWarnings("preview")
     static void main() {
-        final Runnable ioTask =
-                () -> {
-                    try {
-                        Thread.sleep(250L);
-                    } catch (InterruptedException interEx) {
-                        Thread.currentThread().interrupt();
-                    }
-                };
 
-        measureThroughput("256 fixed thread pool", Executors.newFixedThreadPool(256), ioTask);
-        measureThroughput("1000 fixed thread pool", Executors.newFixedThreadPool(1000), ioTask);
-        measureThroughput(
-                "Virtual thread pool", Executors.newVirtualThreadPerTaskExecutor(), ioTask);
+        NotificationRequest request = new NotificationRequest("id-123", null, "  ", "hello Maksym");
+
+        System.out.println(request.isValid());
+
+        //        final Runnable ioTask =
+        //                () -> {
+        //                    try {
+        //                        Thread.sleep(250L);
+        //                    } catch (InterruptedException interEx) {
+        //                        Thread.currentThread().interrupt();
+        //                    }
+        //                };
+        //
+        //        measureThroughput("256 fixed thread pool", Executors.newFixedThreadPool(256),
+        // ioTask);
+        //        measureThroughput("1000 fixed thread pool", Executors.newFixedThreadPool(1000),
+        // ioTask);
+        //        measureThroughput(
+        //                "Virtual thread pool", Executors.newVirtualThreadPerTaskExecutor(),
+        // ioTask);
     }
 
     /*
