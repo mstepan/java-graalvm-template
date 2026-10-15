@@ -17,7 +17,7 @@
 
         <!-- 3rd party dependencies -->
         <junit.version>5.13.4</junit.version>
-        
+
         <!-- PostgreSQL JDBC -->
         <postgresql.jdbc.version>42.7.4</postgresql.jdbc.version>
 
@@ -290,6 +290,16 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+        https://github.com/JetBrains/lincheck
+        -->
+        <dependency>
+            <groupId>org.jetbrains.lincheck</groupId>
+            <artifactId>lincheck</artifactId>
+            <version>3.7</version>
             <scope>test</scope>
         </dependency>
 
