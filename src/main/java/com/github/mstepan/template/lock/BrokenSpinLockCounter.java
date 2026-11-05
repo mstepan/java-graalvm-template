@@ -7,6 +7,9 @@ import java.lang.invoke.VarHandle;
 public class BrokenSpinLockCounter {
 
     @SuppressWarnings("unused")
+    @SuppressFBWarnings(
+            value = "UUF_UNUSED_FIELD",
+            justification = "Accessed through LOCK_HANDLER VarHandle rather than directly")
     private boolean locked;
 
     private volatile int count;

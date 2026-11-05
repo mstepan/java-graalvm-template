@@ -100,6 +100,7 @@ public class SlidingWindowMinimumTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Deliberately violates the nullness contract to test validation.
     void nullArrayThrowsNpe() {
         assertThrows(
                 NullPointerException.class, () -> SlidingWindowMinimum.slidingWindowMin(null, 1));

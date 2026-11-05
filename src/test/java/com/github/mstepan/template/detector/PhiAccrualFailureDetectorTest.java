@@ -8,6 +8,16 @@ import org.junit.jupiter.api.Test;
 public class PhiAccrualFailureDetectorTest {
 
     @Test
+    void delayWellBelowObservedHeartbeatsHasNegligibleSuspicion() {
+        var detector = new PhiAccrualFailureDetector();
+        for (int i = 0; i < 10; i++) {
+            detector.addDelay(Duration.ofSeconds(1));
+        }
+        assertEquals(0.0, detector.computePhi(Duration.ofMillis(1)), 1e-9);
+        assertEquals(12.0, detector.computePhi(Duration.ofSeconds(2)), 1e-9);
+    }
+
+    @Test
     void checkPhiValue() {
         PhiAccrualFailureDetector phiAccrualFailureDetector = new PhiAccrualFailureDetector();
 

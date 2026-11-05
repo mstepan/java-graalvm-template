@@ -1,7 +1,12 @@
 package com.github.mstepan.template.notification;
 
+import org.jspecify.annotations.Nullable;
+
 public record NotificationRequest(
-        String requestId, NotificationType type, String recipient, String message) {
+        @Nullable String requestId,
+        @Nullable NotificationType type,
+        @Nullable String recipient,
+        @Nullable String message) {
 
     public boolean isValid() {
         if (requestId == null || recipient == null || message == null || type == null) {

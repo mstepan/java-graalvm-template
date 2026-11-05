@@ -3,15 +3,16 @@ package com.github.mstepan.template.concurrent;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicReference;
+import org.jspecify.annotations.Nullable;
 
 @SuppressWarnings("preview")
 public final class AwaitAllSuccessfulOrFailWithRateLimiterJoiner<T>
-        implements StructuredTaskScope.Joiner<T, Void> {
+        implements StructuredTaskScope.Joiner<T, @Nullable Void> {
 
     private static final int MAX_ALLOWED_COUNT = 10_000;
 
     private final Semaphore semaphore;
-    private final AtomicReference<Throwable> firstFailure;
+    private final AtomicReference<@Nullable Throwable> firstFailure;
 
     public AwaitAllSuccessfulOrFailWithRateLimiterJoiner(int allowedCount) {
         if (allowedCount <= 0 || allowedCount > MAX_ALLOWED_COUNT) {
@@ -49,6 +50,7 @@ public final class AwaitAllSuccessfulOrFailWithRateLimiterJoiner<T>
     public boolean onComplete(StructuredTaskScope.Subtask<? extends T> subtask) {
         try {
             switch (subtask.state()) {
+                case SUCCESS -> {}
                 case FAILED -> {
                     firstFailure.compareAndSet(null, subtask.exception());
                     return true;
@@ -64,7 +66,7 @@ public final class AwaitAllSuccessfulOrFailWithRateLimiterJoiner<T>
     }
 
     @Override
-    public Void result() throws Throwable {
+    public @Nullable Void result() throws Throwable {
         Throwable failure = firstFailure.get();
         if (failure != null) {
             throw failure;

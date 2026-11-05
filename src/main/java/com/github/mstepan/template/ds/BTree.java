@@ -3,15 +3,17 @@ package com.github.mstepan.template.ds;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
-public class BTree<T> {
+public class BTree<T extends @Nullable Object> {
 
     private static final int KEYS_PER_NODE = 13;
 
     private LevelNode root = new LeafNode();
 
     @SuppressWarnings("unchecked")
-    public T add(int key, T value) {
+    public @Nullable T add(int key, T value) {
 
         final Deque<LevelNode> traversalPath = findLeafNodeForKey(key);
         assert !traversalPath.isEmpty();
@@ -91,11 +93,11 @@ public class BTree<T> {
 
             if (idx >= 0) {
                 traversalPath.push(in);
-                cur = in.children[idx + 1];
+                cur = Objects.requireNonNull(in.children[idx + 1]);
             } else {
                 int insertionPoint = -(idx + 1);
                 traversalPath.push(in);
-                cur = in.children[insertionPoint];
+                cur = Objects.requireNonNull(in.children[insertionPoint]);
             }
         }
 
@@ -115,15 +117,15 @@ public class BTree<T> {
             length = 0;
         }
 
-        public abstract SplitInfo split();
+        abstract SplitInfo split();
 
-        public abstract boolean isLeaf();
+        abstract boolean isLeaf();
 
-        public int findIndexForKey(int key) {
+        int findIndexForKey(int key) {
             return Arrays.binarySearch(keys, 0, length, key);
         }
 
-        public boolean isFull() {
+        boolean isFull() {
             return keys.length == length;
         }
 
@@ -135,7 +137,7 @@ public class BTree<T> {
 
     private static class LeafNode extends LevelNode {
 
-        Object[] values;
+        @Nullable Object[] values;
 
         LeafNode() {
             super();
@@ -143,11 +145,11 @@ public class BTree<T> {
         }
 
         @Override
-        public boolean isLeaf() {
+        boolean isLeaf() {
             return true;
         }
 
-        public void insertKeyAndValue(int key, Object value) {
+        void insertKeyAndValue(int key, @Nullable Object value) {
             if (length == 0) {
                 keys[length] = key;
                 values[length] = value;
@@ -175,7 +177,7 @@ public class BTree<T> {
         }
 
         @Override
-        public SplitInfo split() {
+        SplitInfo split() {
             int mid = length / 2;
 
             LeafNode left = new LeafNode();
@@ -198,7 +200,7 @@ public class BTree<T> {
 
     private static class InternalNode extends LevelNode {
 
-        LevelNode[] children;
+        @Nullable LevelNode[] children;
 
         InternalNode() {
             super();
@@ -206,11 +208,11 @@ public class BTree<T> {
         }
 
         @Override
-        public boolean isLeaf() {
+        boolean isLeaf() {
             return false;
         }
 
-        public int insertKey(int key) {
+        int insertKey(int key) {
             if (length == 0) {
                 keys[length] = key;
                 ++length;
@@ -236,7 +238,7 @@ public class BTree<T> {
         }
 
         @Override
-        public SplitInfo split() {
+        SplitInfo split() {
             int mid = length / 2;
 
             InternalNode left = new InternalNode();

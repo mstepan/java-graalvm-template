@@ -2,11 +2,10 @@ package com.github.mstepan.template.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.jetbrains.lincheck.Lincheck;
-import org.junit.jupiter.api.Test;
-
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import org.jetbrains.lincheck.Lincheck;
+import org.junit.jupiter.api.Test;
 
 public class ConcurrentCounterTest {
 
@@ -36,10 +35,9 @@ public class ConcurrentCounterTest {
     @Test
     void increment() {
 
-        final Counter counter = new Counter();
-
         Lincheck.runConcurrentTest(
                 () -> {
+                    final Counter counter = new Counter();
                     Thread t1 = Thread.ofPlatform().unstarted(counter::inc);
                     Thread t2 = Thread.ofPlatform().unstarted(counter::inc);
 

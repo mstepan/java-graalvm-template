@@ -37,8 +37,12 @@ public class DbQueueMain {
     Total ops completed: 40000.0
     Throughput: 3291.42 ops/sec
      */
-    @SuppressWarnings(value = {"preview", "CatchAndPrintStackTrace"})
-    void main() throws Exception {
+    void main() throws InterruptedException {
+        run(JDBC_URL);
+    }
+
+    @SuppressWarnings("preview")
+    void run(String jdbcUrl) throws InterruptedException {
 
         // tasksCount should be limited to 20, otherwise we wil exhaust postgres connection pool
         final int tasksCount = 20;
@@ -60,13 +64,12 @@ public class DbQueueMain {
                             try (DbQueue queue =
                                     new DbQueue(
                                             DriverManager.getConnection(
-                                                    JDBC_URL, DB_USER, DB_PASSWORD))) {
+                                                    jdbcUrl, DB_USER, DB_PASSWORD))) {
                                 for (int it = 0; it < iterationsCount; ++it) {
                                     queue.add(String.format("writer-%d-message-%d", writerId, it));
                                 }
-                            } catch (Exception sqlEx) {
-                                sqlEx.printStackTrace();
                             }
+                            return null;
                         });
             }
 
@@ -77,14 +80,13 @@ public class DbQueueMain {
                             try (DbQueue queue =
                                     new DbQueue(
                                             DriverManager.getConnection(
-                                                    JDBC_URL, DB_USER, DB_PASSWORD))) {
+                                                    jdbcUrl, DB_USER, DB_PASSWORD))) {
 
                                 for (int it = 0; it < iterationsCount; ++it) {
                                     String _ = queue.poll();
                                 }
-                            } catch (Exception sqlEx) {
-                                sqlEx.printStackTrace();
                             }
+                            return null;
                         });
             }
 

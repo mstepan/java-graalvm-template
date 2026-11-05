@@ -2,6 +2,7 @@ package com.github.mstepan.template.probabalistic;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.concurrent.ThreadLocalRandom;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Universal hash function.
@@ -33,7 +34,7 @@ public class Hash<T> {
         b = rand.nextLong(P - 1);
     }
 
-    public long hash(T key) {
+    public long hash(@Nullable T key) {
         int keyHashCode = (key == null) ? 0 : key.hashCode();
         return (a * keyHashCode + b) % P;
     }

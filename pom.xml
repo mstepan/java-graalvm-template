@@ -22,7 +22,9 @@
         <postgresql.jdbc.version>42.7.4</postgresql.jdbc.version>
 
         <!-- ErrorProne (https://errorprone.info/) -->
-        <error.prone.version>2.36.0</error.prone.version>
+        <error.prone.version>2.52.0</error.prone.version>
+        <nullaway.version>0.14.3</nullaway.version>
+        <jspecify.version>1.0.0</jspecify.version>
 
         <!--
         GraalVM native tools
@@ -37,10 +39,16 @@
         <!-- Spotbugs -->
         <maven.spotbugs.plugin.version>4.9.7.0</maven.spotbugs.plugin.version>
         <spotbugs.version>4.9.7</spotbugs.version>
-        <find.security.bugs.version>1.12.0</find.security.bugs.version>
+        <find.security.bugs.version>1.14.0</find.security.bugs.version>
 
         <!-- Unit tests -->
         <maven.surefire.plugin.version>3.5.3</maven.surefire.plugin.version>
+        <jacoco.maven.plugin.version>0.8.14</jacoco.maven.plugin.version>
+        <argLine/>
+
+        <!-- Quality gates -->
+        <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
+        <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
 
         <!-- Maven other plugins -->
         <maven.compiler.plugin.version>3.12.1</maven.compiler.plugin.version>
@@ -50,6 +58,35 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven.enforcer.plugin.version}</version>
+                <configuration>
+                    <fail>true</fail>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[25,26)</version>
+                        </requireJavaVersion>
+                        <requireMavenVersion>
+                            <version>[3.9.9,)</version>
+                        </requireMavenVersion>
+                        <dependencyConvergence/>
+                        <requireReleaseDeps/>
+                        <banDuplicatePomDependencyVersions/>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce-build</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <!--
            Spotless is a general-purpose formatting plugin. It is completely Ã la carte,
@@ -91,6 +128,9 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${maven.spotbugs.plugin.version}</version>
                 <configuration>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                    <failOnError>true</failOnError>
                     <plugins>
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>
@@ -128,12 +168,16 @@
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
+                        <arg>-Xlint:all</arg>
+                        <!-- Structured concurrency intentionally uses preview APIs. -->
+                        <arg>-Xlint:-preview</arg>
+                        <arg>-Werror</arg>
                         <!--
                         https://errorprone.info/docs/installation#maven
                         -->
                         <arg>-XDcompilePolicy=simple</arg>
                         <arg>--should-stop=ifError=FLOW</arg>
-                        <arg>-Xplugin:ErrorProne</arg>
+                        <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:OnlyNullMarked=true -XepOpt:NullAway:JSpecifyMode=true</arg>
                         <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
                         <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
                         <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
@@ -151,11 +195,11 @@
                             <artifactId>error_prone_core</artifactId>
                             <version>${error.prone.version}</version>
                         </path>
-                        <!-- Other annotation processors go here.
-
-                        If 'annotationProcessorPaths' is set, processors will no longer be
-                        discovered on the regular -classpath; see also 'Using Error Prone
-                        together with other annotation processors' below. -->
+                        <path>
+                            <groupId>com.uber.nullaway</groupId>
+                            <artifactId>nullaway</artifactId>
+                            <version>${nullaway.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
 
@@ -207,8 +251,84 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.plugin.version}</version>
                 <configuration>
-                    <argLine>--enable-preview</argLine>
+                    <!-- Lincheck requires instrumentation and Unsafe on Java 25. -->
+                    <argLine>@{argLine} --enable-preview -XX:+EnableDynamicAgentLoading -Xshare:off --sun-misc-unsafe-memory-access=allow</argLine>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.maven.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>com.github.mstepan.template.*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>coverage-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.92</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.73</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${maven.pmd.plugin.version}</version>
+                <configuration>
+                    <targetJdk>${maven.compiler.target}</targetJdk>
+                    <minimumTokens>100</minimumTokens>
+                    <failOnViolation>true</failOnViolation>
+                    <linkXRef>false</linkXRef>
+                    <skipEmptyReport>true</skipEmptyReport>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-cpd-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>cpd-check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -281,9 +401,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>24.1.0</version>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>${jspecify.version}</version>
         </dependency>
 
         <!-- Test -->

@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Postgres as a Queue described here
@@ -46,7 +47,7 @@ public class DbQueue implements AutoCloseable {
         }
     }
 
-    String poll() {
+    @Nullable String poll() {
         try {
             var prevAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
@@ -65,9 +66,9 @@ public class DbQueue implements AutoCloseable {
                 connection.commit();
 
                 return retMessage;
-            } catch (SQLException sqlEx) {
+            } catch (SQLException | RuntimeException ex) {
                 connection.rollback();
-                throw new IllegalStateException(sqlEx);
+                throw new IllegalStateException(ex);
             } finally {
                 connection.setAutoCommit(prevAutocommit);
             }
@@ -76,7 +77,7 @@ public class DbQueue implements AutoCloseable {
         }
     }
 
-    private QueueRow readNotLockedRowFromQueueTable() throws SQLException {
+    private @Nullable QueueRow readNotLockedRowFromQueueTable() throws SQLException {
         try (var selectFromQueueStatement = connection.prepareStatement(SELECT_FROM_QUEUE_TABLE)) {
 
             var rs = selectFromQueueStatement.executeQuery();
@@ -128,7 +129,7 @@ public class DbQueue implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws SQLException {
         connection.close();
     }
 

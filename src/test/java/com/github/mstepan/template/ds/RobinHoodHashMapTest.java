@@ -50,6 +50,7 @@ class RobinHoodHashMapTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Deliberately violates the nullness contract to test validation.
     void nullKeyOperationsThrow() {
         RobinHoodHashMap<String, Integer> map = new RobinHoodHashMap<>();
 
@@ -181,6 +182,7 @@ class RobinHoodHashMapTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Deliberately violates the nullness contract to test validation.
     void removeNullKeyThrows() {
         RobinHoodHashMap<String, Integer> map = new RobinHoodHashMap<>();
         assertThrows(IllegalArgumentException.class, () -> map.remove(null));
@@ -281,6 +283,7 @@ class RobinHoodHashMapTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway") // Deliberately violates the nullness contract to test validation.
     void copyConstructorNullMapThrows() {
         assertThrows(
                 IllegalArgumentException.class, () -> new RobinHoodHashMap<String, Integer>(null));
@@ -356,6 +359,39 @@ class RobinHoodHashMapTest {
             assertTrue(copy.containsKey(probe), "Missing key " + probe);
             assertEquals("v" + i, copy.get(probe));
         }
+    }
+
+    @Test
+    void insertionDisplacesEntryFromItsHomeSlotWithoutLosingValues() {
+        RobinHoodHashMap<TestKey, String> map = new RobinHoodHashMap<>();
+        TestKey first = new TestKey(0, 0);
+        TestKey displaced = new TestKey(1, 1);
+        TestKey collision = new TestKey(2, 0);
+
+        map.put(first, "first");
+        map.put(displaced, "displaced");
+        map.put(collision, "collision");
+
+        assertEquals(3, map.size());
+        assertEquals("first", map.get(first));
+        assertEquals("displaced", map.get(displaced));
+        assertEquals("collision", map.get(collision));
+        assertFalse(map.containsKey(new TestKey(3, 0)));
+        assertEquals("collision", map.remove(collision));
+        assertEquals("displaced", map.get(displaced));
+    }
+
+    @Test
+    void removalLeavesNeighborInItsHomeSlot() {
+        RobinHoodHashMap<TestKey, String> map = new RobinHoodHashMap<>();
+        TestKey first = new TestKey(0, 0);
+        TestKey neighbor = new TestKey(1, 1);
+        map.put(first, "first");
+        map.put(neighbor, "neighbor");
+
+        assertEquals("first", map.remove(first));
+        assertEquals("neighbor", map.get(neighbor));
+        assertEquals(1, map.size());
     }
 
     /** Helper key with controlled hashCode to craft collision scenarios. */

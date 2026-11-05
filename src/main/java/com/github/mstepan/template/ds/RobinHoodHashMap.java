@@ -3,8 +3,9 @@ package com.github.mstepan.template.ds;
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Robin-Hood hashtable implementation. <a
@@ -13,12 +14,12 @@ import org.jetbrains.annotations.NotNull;
  * <p>Instead of 'probe sequence length' we are using 'initial slot index'
  * (SlotEntry.initialSlotIdx)
  */
-public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
+public final class RobinHoodHashMap<K, V extends @Nullable Object> extends AbstractMap<K, V> {
 
     private static final int DEFAULT_CAPACITY = 8;
     private static final double DEFAULT_LOAD_FACTOR = 0.75;
 
-    private SlotEntry<K, V>[] slots = allocateSlotsArray(DEFAULT_CAPACITY);
+    private @Nullable SlotEntry<K, V>[] slots = allocateSlotsArray(DEFAULT_CAPACITY);
 
     private int size;
 
@@ -37,10 +38,10 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     }
 
     @Override
-    public V put(K initialKey, V initialValue) {
+    public @Nullable V put(K initialKey, V initialValue) {
         checkForNullKey(initialKey);
 
-        V prevValue = insertValue(initialKey, initialValue);
+        @Nullable V prevValue = insertValue(initialKey, initialValue);
 
         if (prevValue == null) {
             ++size;
@@ -50,11 +51,11 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     }
 
     @Override
-    public V get(Object key) {
+    public @Nullable V get(Object key) {
         checkForNullKey(key);
 
         int idx = findEntryIndex(key);
-        return (idx == -1) ? null : slots[idx].value;
+        return (idx == -1) ? null : Objects.requireNonNull(slots[idx]).value;
     }
 
     private int findEntryIndex(Object key) {
@@ -92,7 +93,7 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     }
 
     @Override
-    public V remove(Object key) {
+    public @Nullable V remove(Object key) {
         checkForNullKey(key);
 
         final int idx = findEntryIndex(key);
@@ -100,7 +101,7 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
         if (idx == -1) {
             return null;
         }
-        final V retValue = slots[idx].value;
+        final V retValue = Objects.requireNonNull(slots[idx]).value;
         slots[idx] = null;
         --size;
 
@@ -141,7 +142,6 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
         size = 0;
     }
 
-    @NotNull
     @Override
     public Set<Entry<K, V>> entrySet() {
         Set<Entry<K, V>> result = new HashSet<>(size);
@@ -160,10 +160,10 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
         }
     }
 
-    private V insertValue(K initialKey, V initialValue) {
+    private @Nullable V insertValue(K initialKey, V initialValue) {
 
         final int slotsMod = slots.length - 1;
-        V prevValue = null;
+        @Nullable V prevValue = null;
 
         K key = initialKey;
         V value = initialValue;
@@ -220,7 +220,7 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     }
 
     private void resize() {
-        final SlotEntry<K, V>[] oldSlots = slots;
+        final @Nullable SlotEntry<K, V>[] oldSlots = slots;
 
         slots = allocateSlotsArray(oldSlots.length * 2);
 
@@ -236,11 +236,12 @@ public final class RobinHoodHashMap<K, V> extends AbstractMap<K, V> implements M
     }
 
     @SuppressWarnings("unchecked")
-    private static <K, V> SlotEntry<K, V>[] allocateSlotsArray(int slotsSize) {
-        return (SlotEntry<K, V>[]) new SlotEntry[slotsSize];
+    private static <K, V extends @Nullable Object> @Nullable SlotEntry<K, V>[] allocateSlotsArray(
+            int slotsSize) {
+        return (@Nullable SlotEntry<K, V>[]) new SlotEntry<?, ?>[slotsSize];
     }
 
-    static class SlotEntry<K, V> {
+    static class SlotEntry<K, V extends @Nullable Object> {
         K key;
         V value;
         int initialSlotIdx;

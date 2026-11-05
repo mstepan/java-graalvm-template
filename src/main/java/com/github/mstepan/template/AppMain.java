@@ -16,31 +16,29 @@ public class AppMain {
 
                 final int id = i;
 
-                var _ =
-                        scope.fork(
-                                () -> {
-                                    if (id == 5) {
-                                        System.out.println("Task will fail");
-                                        throw new ArithmeticException("Division by 0");
-                                    }
+                scope.fork(
+                        () -> {
+                            if (id == 5) {
+                                System.out.println("Task will fail");
+                                throw new ArithmeticException("Division by 0");
+                            }
 
-                                    System.out.printf(
-                                            "[%s] started%n", Thread.currentThread().threadId());
-                                    try {
-                                        Thread.sleep(Duration.ofSeconds(3L));
-                                    } catch (InterruptedException interEx) {
-                                        Thread.currentThread().interrupt();
-                                        System.out.println("Cancelled");
-                                    }
+                            System.out.printf("[%s] started%n", Thread.currentThread().threadId());
+                            try {
+                                Thread.sleep(Duration.ofSeconds(3L));
+                            } catch (InterruptedException interEx) {
+                                Thread.currentThread().interrupt();
+                                System.out.println("Cancelled");
+                            }
 
-                                    System.out.printf(
-                                            "[%s] completed%n", Thread.currentThread().threadId());
+                            System.out.printf(
+                                    "[%s] completed%n", Thread.currentThread().threadId());
 
-                                    return "result-" + id;
-                                });
+                            return "result-" + id;
+                        });
             }
 
-            var _ = scope.join();
+            scope.join();
 
             System.out.println("All tasks completed");
 

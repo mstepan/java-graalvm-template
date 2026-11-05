@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A StructuredTaskScope.Joiner that completes as soon as any subtask completes successfully.
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 @SuppressWarnings({"preview", "unused"})
 public class AtLeastOneCompleted<T> implements StructuredTaskScope.Joiner<T, Stream<T>> {
 
-    private final AtomicReference<T> result = new AtomicReference<>();
+    private final AtomicReference<@Nullable T> result = new AtomicReference<>();
     private final Queue<Throwable> exceptions = new ConcurrentLinkedQueue<>();
 
     /**

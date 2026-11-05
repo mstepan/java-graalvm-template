@@ -48,12 +48,12 @@ public final class RateLimiterTaskScope<T> implements StructuredTaskScope.Joiner
      * Acquires a permit before forking the given subtask and delegates to the default Joiner
      * behavior.
      *
-     * <p>If interrupted while waiting for a permit, the interrupt status is restored and a
-     * RuntimeException is thrown.
+     * <p>If interrupted while waiting for a permit, the interrupt status is restored and an
+     * IllegalStateException is thrown.
      *
      * @param subtask the subtask about to be forked
      * @return true if the subtask should be started
-     * @throws RuntimeException if interrupted while acquiring a permit
+     * @throws IllegalStateException if interrupted while acquiring a permit
      */
     @Override
     public boolean onFork(StructuredTaskScope.Subtask<? extends T> subtask) {
@@ -62,7 +62,7 @@ public final class RateLimiterTaskScope<T> implements StructuredTaskScope.Joiner
             return StructuredTaskScope.Joiner.super.onFork(subtask);
         } catch (InterruptedException interEx) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(interEx);
+            throw new IllegalStateException("Interrupted while acquiring a task permit", interEx);
         }
     }
 

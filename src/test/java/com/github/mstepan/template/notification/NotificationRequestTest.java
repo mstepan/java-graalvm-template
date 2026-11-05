@@ -48,4 +48,28 @@ public class NotificationRequestTest {
         assertFalse(
                 new NotificationRequest("id-123", null, "maksym@oracle.com", "Hello!!!").isValid());
     }
+
+    @Test
+    void nullMessageIsInvalid() {
+        assertFalse(new NotificationRequest("id", NotificationType.PUSH, "device", null).isValid());
+    }
+
+    @Test
+    void pushRequiresNonblankRecipient() {
+        assertTrue(
+                new NotificationRequest("id", NotificationType.PUSH, " device ", "hello")
+                        .isValid());
+        assertFalse(new NotificationRequest("id", NotificationType.PUSH, "  ", "hello").isValid());
+    }
+
+    @Test
+    void smsRequiresLeadingPlusAndTwelveCharactersAfterTrimming() {
+        assertTrue(
+                new NotificationRequest("id", NotificationType.SMS, " +12345678901 ", "hello")
+                        .isValid());
+        assertFalse(
+                new NotificationRequest("id", NotificationType.SMS, "123456789012", "hello")
+                        .isValid());
+        assertFalse(new NotificationRequest("id", NotificationType.SMS, "+123", "hello").isValid());
+    }
 }

@@ -5,7 +5,9 @@
 * Compiled to native executable using [GraalVM](https://www.graalvm.org/)
 * Uses [virtual threads](https://docs.oracle.com/en/java/javase/25/core/virtual-threads.html)
   and [structured concurrency](https://docs.oracle.com/en/java/javase/24/core/structured-concurrency.html)
-* Uses [Error Prone](https://errorprone.info/) as an additional compiler to `javac`.
+* Uses [Error Prone](https://errorprone.info/) with [NullAway](https://github.com/uber/NullAway) during compilation.
+  Nullness violations fail the build. All project packages use JSpecify `@NullMarked`; use
+  `org.jspecify.annotations.Nullable` for values that can be null (including generic arguments and array elements).
 * Uses [Spotless](https://github.com/diffplug/spotless/) for automatic code formatting
   in [Android Open Source Project](https://source.android.com/docs/setup/contribute/code-style) style.
 * Uses [grype](https://github.com/anchore/grype) to detect CVEs inside dependencies.
@@ -28,6 +30,25 @@
 ```bash
 ./run.sh
 ```
+
+### Quality gates
+
+```bash
+./mvnw clean verify
+```
+
+The default build enforces:
+
+* Java 25 and Maven 3.9.9 or newer.
+* Convergent dependency versions, release dependencies, and no duplicate dependency declarations.
+* Compiler lint warnings as errors (except intentional preview API use), alongside Error Prone and NullAway.
+* SpotBugs at maximum effort and low threshold, including Find Security Bugs.
+* JaCoCo coverage of at least 92% of lines and 73% of branches across production code.
+* PMD violations and CPD duplicate blocks of 100 tokens or more.
+
+Coverage, PMD, and CPD checks run in the `test` phase, so `test`, `package`, and
+`verify` enforce them. Reports are written to `target/site/jacoco/index.html`,
+`target/pmd.xml`, and `target/cpd.xml`. Violations fail the build.
 
 ### Native image
 
